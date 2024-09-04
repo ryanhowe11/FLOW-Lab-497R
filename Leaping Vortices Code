@@ -1,0 +1,83 @@
+using LinearAlgebra
+using Plots
+
+# Function to initialize points
+function initialize_points()
+    P1 = [0, -.5, 0]
+    P2 = [0, .5, 0]
+    P3 = [1, .5, 0]
+    P4 = [1, -.5, 0]
+    return P1, P2, P3, P4
+end
+
+# Function to calculate a single velocity
+function calculate_velocity(P1, P2, P3, P4, ΓP, ΓR, ΓN)
+    V = (cross(ΓP, (P1 .- P2)) ./ (2π * (norm(P1 .- P2))^2)) .+ 
+        (cross(ΓR, (P1 .- P3)) ./ (2π * (norm(P1 .- P3))^2)) .+ 
+        (cross(ΓN, (P1 .- P4)) ./ (2π * (norm(P1 .- P4))^2))
+    return V
+end
+
+# Function to calculate all velocities
+function calculate_all_velocities(P1, P2, P3, P4, ΓP, ΓR, ΓN)
+    V1 = calculate_velocity(P1, P2, P3, P4, ΓP, ΓP, ΓN)
+    V2 = calculate_velocity(P2, P1, P3, P4, ΓN, ΓP, ΓN)
+    V3 = calculate_velocity(P3, P1, P2, P4, ΓN, ΓP, ΓN)
+    V4 = calculate_velocity(P4, P1, P2, P3, ΓN, ΓP, ΓP)
+    return V1, V2, V3, V4
+end
+
+# Function to update positions
+function update_positions!(P1, P2, P3, P4, V1, V2, V3, V4, t)
+    P1 .+= V1 .* t
+    P2 .+= V2 .* t
+    P3 .+= V3 .* t
+    P4 .+= V4 .* t
+end
+
+# Function to store data
+function store_data!(X, Y, P, i)
+    X[i] = P[1]
+    Y[i] = P[2]
+end
+
+# Function to plot results
+function plot_results(X1, Y1, X2, Y2, X3, Y3, X4, Y4)
+    p = plot(X1, Y1, label="Ring 1", lc=:blue, lw=2)
+    plot!(p, X2, Y2, label="", lc=:blue, lw=2)
+    plot!(p, X3, Y3, label="Ring 2", lc=:green, lw=2)
+    plot!(p, X4, Y4, label="", lc=:green, lw=2)
+    savefig(p, "Fluids_Onboarding_Project_Plot.pdf")
+end
+
+# Main simulation function
+function simulate_vortex_motion(n_steps=4000, t=0.01)
+    P1, P2, P3, P4 = initialize_points()
+    ΓP = [0; 0; 1]
+    ΓR = ΓP
+    ΓN = [0; 0; -1]
+
+    X1 = zeros(n_steps)
+    X2 = zeros(n_steps)
+    X3 = zeros(n_steps)
+    X4 = zeros(n_steps)
+    Y1 = zeros(n_steps)
+    Y2 = zeros(n_steps)
+    Y3 = zeros(n_steps)
+    Y4 = zeros(n_steps)
+
+    for i in 1:n_steps
+        V1, V2, V3, V4 = calculate_all_velocities(P1, P2, P3, P4, ΓP, ΓR, ΓN)
+        update_positions!(P1, P2, P3, P4, V1, V2, V3, V4, t)
+        store_data!(X1, Y1, P1, i)
+        store_data!(X2, Y2, P2, i)
+        store_data!(X3, Y3, P3, i)
+        store_data!(X4, Y4, P4, i)
+    end
+
+    plot_results(X1, Y1, X2, Y2, X3, Y3, X4, Y4)
+end
+# Call the main simulation function
+simulate_vortex_motion()
+
+
