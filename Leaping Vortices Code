@@ -28,7 +28,6 @@ function calculate_all_velocities(P1, P2, P3, P4, ΓP, ΓR, ΓN)
 end
 
 # Function to update positions
-function update_positions!(P1, P2, P3, P4, V1, V2, V3, V4, t)
     P1 .+= V1 .* t
     P2 .+= V2 .* t
     P3 .+= V3 .* t
@@ -52,11 +51,6 @@ end
 
 # Main simulation function
 function simulate_vortex_motion(n_steps=4000, t=0.01)
-    P1, P2, P3, P4 = initialize_points()
-    ΓP = [0; 0; 1]
-    ΓR = ΓP
-    ΓN = [0; 0; -1]
-
     X1 = zeros(n_steps)
     X2 = zeros(n_steps)
     X3 = zeros(n_steps)
@@ -68,7 +62,7 @@ function simulate_vortex_motion(n_steps=4000, t=0.01)
 
     for i in 1:n_steps
         V1, V2, V3, V4 = calculate_all_velocities(P1, P2, P3, P4, ΓP, ΓR, ΓN)
-        update_positions!(P1, P2, P3, P4, V1, V2, V3, V4, t)
+        update_all_positions!(P1, P2, P3, P4, V1, V2, V3, V4, t)
         store_data!(X1, Y1, P1, i)
         store_data!(X2, Y2, P2, i)
         store_data!(X3, Y3, P3, i)
@@ -77,6 +71,11 @@ function simulate_vortex_motion(n_steps=4000, t=0.01)
 
     plot_results(X1, Y1, X2, Y2, X3, Y3, X4, Y4)
 end
+
+P1, P2, P3, P4 = initialize_points()
+ΓP = [0; 0; 1]
+ΓR = ΓP
+ΓN = [0; 0; -1]
 # Call the main simulation function
 simulate_vortex_motion()
 
