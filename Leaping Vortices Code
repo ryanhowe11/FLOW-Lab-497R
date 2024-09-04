@@ -28,6 +28,7 @@ function calculate_all_velocities(P1, P2, P3, P4, ΓP, ΓR, ΓN)
 end
 
 # Function to update positions
+function update_all_positions!(P1, P2, P3, P4, V1, V2, V3, V4, t)
     P1 .+= V1 .* t
     P2 .+= V2 .* t
     P3 .+= V3 .* t
