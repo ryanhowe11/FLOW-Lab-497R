@@ -25,7 +25,8 @@ function set_operating_conditions()
     alpha = -9:1:14  # Range of angle of attacks, in degrees
     re = 1e5         # Reynolds number
     mach = 0.0       # Mach #
-    return alpha, re, mach
+    complex = 0
+    return alpha, re, mach, complex
 end
 
 function solve_alpha(alpha::StepRange{Int64, Int64}, re::Float64)
@@ -207,7 +208,7 @@ function main(filename::String)
     x, y = read_airfoil_coordinates(filename)
     
     # Set operating conditions
-    alpha, re, mach = set_operating_conditions()
+    alpha, re, mach, complex = set_operating_conditions()
     
     # Repanel and plot airfoil
     xr, yr = repanel_and_plot_airfoil()
@@ -217,18 +218,21 @@ function main(filename::String)
 
     #plotting function
     plot_all(xr, yr, alpha, c_l, c_d, c_m)
+    if complex == 1
+        #perform sensitivity sensitivity_analysis
+        sensitivity_analysis(alpha, re, mach, filename)
 
-    #perform sensitivity sensitivity_analysis
-    sensitivity_analysis(alpha, re, mach, filename)
+        #Perform Angle of Attack Sweeps
+        Automated_Angle_of_Attack_Sweep(filename)
+        
+    else
 
-    #complex step method sensitivity sensitivity_analysis
-    cs_sensitivity_analysis(filename)
+        #complex step method sensitivity sensitivity_analysis
+        cs_sensitivity_analysis(filename)
 
-    #Perform Angle of Attack Sweeps
-    Automated_Angle_of_Attack_Sweep(filename)
-
-    #Perform Angle of Attack Sweeps using Complex step method
-    cs_Automated_Angle_of_Attack_Sweep(filename)
+        #Perform Angle of Attack Sweeps using Complex step method
+        cs_Automated_Angle_of_Attack_Sweep(filename)
+    end
 end
 
 # Call the main function with the filename
