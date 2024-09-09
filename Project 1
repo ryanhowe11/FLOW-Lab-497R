@@ -1,0 +1,93 @@
+using Xfoil, Plots, Printf, DelimitedFiles
+pyplot()
+
+function read_airfoil_coordinates(filename::String)
+    # Read airfoil coordinates from a file
+    data = readdlm(filename)
+    
+    # Separate the columns into x and y
+    x = data[:, 1]
+    y = data[:, 2]
+
+    # Load airfoil coordinates into XFOIL
+    Xfoil.set_coordinates(x, y)
+    return x, y
+end
+
+function repanel_and_plot_airfoil()
+    # Repanel using XFOIL's `PANE` command
+    xr, yr = Xfoil.pane()
+    return xr, yr
+end
+
+function set_operating_conditions()
+    # Set operating conditions
+    alpha = -9:1:14  # Range of angle of attacks, in degrees
+    re = 1e5         # Reynolds number
+    return alpha, re
+end
+
+function solve_alpha(alpha::StepRange{Int64, Int64}, re::Float64)
+# initialize outputs
+n_a = length(alpha)
+c_l = zeros(n_a)
+c_d = zeros(n_a)
+c_dp = zeros(n_a)
+c_m = zeros(n_a)
+converged = zeros(Bool, n_a)
+
+# determine airfoil coefficients across a range of angle of attacks
+for i = 1:n_a
+    c_l[i], c_d[i], c_dp[i], c_m[i], converged[i] = Xfoil.solve_alpha(alpha[i], re; iter=100, reinit=true)
+end
+
+# print results
+println("Angle\t\tCl\t\tCd\t\tCm\t\tConverged")
+for i = 1:n_a
+    @printf("%8f\t%8f\t%8f\t%8f\t%d\n",alpha[i],c_l[i],c_d[i],c_m[i],converged[i])
+end
+return c_l, c_d, c_m
+
+end
+
+function plot_airfoil(xr::Vector{Float64}, yr::Vector{Float64})
+    # Plot the refined airfoil geometry
+    p = scatter(xr, yr, label="", framestyle=:none, aspect_ratio=1.0, show=true)
+    savefig(p, "Airfoil_Plot.pdf")
+end
+
+function plot_coefficients(alpha::StepRange{Int64, Int64}, c_l::Vector{Float64}, c_d::Vector{Float64}, c_m::Vector{Float64})
+    p1 = plot(alpha, c_l, label="", xlabel="Angle of Attack (degrees)", ylabel="Lift Coefficient", show=true)
+    savefig(p1, "Lift_Coefficent_Plot.pdf")
+    p2 = plot(alpha, c_d, label="", xlabel="Angle of Attack (degrees)", ylabel="Drag Coefficient",
+        overwrite_figure=false, show=true)
+    savefig(p2, "Drag_Coefficent_Plot.pdf")
+    p3 = plot(alpha, c_m, label="", xlabel="Angle of Attack (degrees)", ylabel="Moment Coefficient",
+        overwrite_figure=false, show=true)
+    savefig(p3, "Moment_Coefficent_Plot.pdf")
+end
+
+function plot_all(xr::Vector{Float64}, yr::Vector{Float64}, alpha::StepRange{Int64, Int64}, c_l::Vector{Float64}, c_d::Vector{Float64}, c_m::Vector{Float64})
+    plot_coefficients(alpha, c_l, c_d, c_m)
+    plot_airfoil(xr,yr)
+end
+
+function main(filename::String)
+    # Read airfoil coordinates
+    x, y = read_airfoil_coordinates(filename)
+    
+    # Set operating conditions
+    alpha, re = set_operating_conditions()
+    
+    # Repanel and plot airfoil
+    xr, yr = repanel_and_plot_airfoil()
+
+    #Solve airfoil
+    c_l, c_d, c_m = solve_alpha(alpha, re)
+
+    #plotting function
+    plot_all(xr, yr, alpha, c_l, c_d, c_m)
+end
+
+# Call the main function with the filename
+main("naca2414.txt")
