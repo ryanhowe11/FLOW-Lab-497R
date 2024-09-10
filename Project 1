@@ -26,6 +26,7 @@ function set_operating_conditions()
     re = 1e5         # Reynolds number
     mach = 0.0       # Mach #
     complex = 0
+    gr()
     return alpha, re, mach, complex
 end
 
@@ -51,26 +52,30 @@ function solve_alpha(alpha::StepRange{Int64, Int64}, re::Float64)
     return c_l, c_d, c_m
 end
 
-function plot_airfoil(xr::Vector{Float64}, yr::Vector{Float64})
+function plot_airfoil(xr::Vector{Float64}, yr::Vector{Float64}, airfoil)
     # Plot the refined airfoil geometry
-    p = scatter(xr, yr, label="", framestyle=:none, aspect_ratio=1.0, show=true)
-    savefig(p, "Airfoil_Plot.pdf")
+    p = scatter(xr, yr, title=airfoil, framestyle=:none, aspect_ratio=1.0, show=true, legend=false)
+    filenamep="$(airfoil)_Airfoil_Plot.pdf"
+    savefig(p, "$(filenamep)")
 end
 
-function plot_coefficients(alpha::StepRange{Int64, Int64}, c_l::Vector{Float64}, c_d::Vector{Float64}, c_m::Vector{Float64})
-    p1 = plot(alpha, c_l, label="", xlabel="Angle of Attack (degrees)", ylabel="Lift Coefficient", show=true)
-    savefig(p1, "Lift_Coefficent_Plot.pdf")
-    p2 = plot(alpha, c_d, label="", xlabel="Angle of Attack (degrees)", ylabel="Drag Coefficient",
-        overwrite_figure=false, show=true)
-    savefig(p2, "Drag_Coefficent_Plot.pdf")
-    p3 = plot(alpha, c_m, label="", xlabel="Angle of Attack (degrees)", ylabel="Moment Coefficient",
-        overwrite_figure=false, show=true)
-    savefig(p3, "Moment_Coefficent_Plot.pdf")
+function plot_coefficients(alpha::StepRange{Int64, Int64}, c_l::Vector{Float64}, c_d::Vector{Float64}, c_m::Vector{Float64}, airfoil)
+    p1 = plot(alpha, c_l, title=airfoil, xlabel="Angle of Attack (degrees)", ylabel="Lift Coefficient", show=true, legend=false)
+        filenamep="$(airfoil)_Lift_Coefficent_Plot.pdf"
+        savefig(p1, "$(filenamep)")
+    p2 = plot(alpha, c_d, title=airfoil, xlabel="Angle of Attack (degrees)", ylabel="Drag Coefficient",
+        overwrite_figure=false, show=true, legend=false)
+        filenamep="$(airfoil)_Drag_Coefficent_Plot.pdf"
+        savefig(p2, "$(filenamep)")
+    p3 = plot(alpha, c_m, title=airfoil, xlabel="Angle of Attack (degrees)", ylabel="Moment Coefficient",
+        overwrite_figure=false, show=true, legend=false)
+        filenamep="$(airfoil)_Moment_Coefficent_Plot.pdf"
+        savefig(p3, "$(filenamep)")    
 end
 
-function plot_all(xr::Vector{Float64}, yr::Vector{Float64}, alpha::StepRange{Int64, Int64}, c_l::Vector{Float64}, c_d::Vector{Float64}, c_m::Vector{Float64})
-    plot_coefficients(alpha, c_l, c_d, c_m)
-    plot_airfoil(xr,yr)
+function plot_all(xr::Vector{Float64}, yr::Vector{Float64}, alpha::StepRange{Int64, Int64}, c_l::Vector{Float64}, c_d::Vector{Float64}, c_m::Vector{Float64}, airfoil)
+    plot_coefficients(alpha, c_l, c_d, c_m, airfoil)
+    plot_airfoil(xr,yr,airfoil)
 end
 
 function sensitivity_analysis(alpha::StepRange{Int64, Int64}, re::Float64, mach::Float64, filename)
@@ -203,7 +208,7 @@ function cs_Automated_Angle_of_Attack_Sweep(filename)
     
 end
 
-function main(filename::String)
+function main(filename::String, airfoil)
     # Read airfoil coordinates
     x, y = read_airfoil_coordinates(filename)
     
@@ -217,7 +222,7 @@ function main(filename::String)
     c_l, c_d, c_m = solve_alpha(alpha, re)
 
     #plotting function
-    plot_all(xr, yr, alpha, c_l, c_d, c_m)
+    plot_all(xr, yr, alpha, c_l, c_d, c_m, airfoil)
     if complex == 1
         #perform sensitivity sensitivity_analysis
         sensitivity_analysis(alpha, re, mach, filename)
@@ -236,4 +241,5 @@ function main(filename::String)
 end
 
 # Call the main function with the filename
-main("naca2414.txt")
+airfoil="NACA 0012"
+main("naca0012.txt")
