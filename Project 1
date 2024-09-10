@@ -23,7 +23,7 @@ end
 function set_operating_conditions()
     # Set operating conditions
     alpha = -9:1:14  # Range of angle of attacks, in degrees
-    re = 1e5         # Reynolds number
+    re = 1e6         # Reynolds number
     mach = 0.0       # Mach #
     complex = 0
     gr()
@@ -245,5 +245,5 @@ function main(filename::String, airfoil)
 end
 
 # Call the main function with the filename
-airfoil="NACA 2412"
+airfoil="NACA 2412 Re=1000000"
 main("naca2412.txt")
