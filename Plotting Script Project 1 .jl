@@ -23,7 +23,7 @@ end
 function set_operating_conditions()
     # Set operating conditions
     aoa_range = -9:1:14  # Range of angle of attacks, in degrees
-    re = 1.0e6           # Reynolds number
+    re = 1.0e4           # Reynolds number
     mach = 0.0           # Mach #
     complex = 0
     gr()
@@ -69,18 +69,22 @@ function main(filename::String)
 end
 
 # Call the main function and store the results
-filename = "naca0012.txt"
-airfoil = "Moment Comparison 0012"
+filename = "naca2412.txt"
+airfoil = "CFD Lift 2412"
 xr, yr, aoa_range, c_l, c_d, c_m, complex = main(filename)
 
 # Plotting code
 
-# Read the CSV file
-df = CSV.File("Moment Data Plot 2.csv", header=false) |> DataFrame
+# Read the Third Party Data CSV file
+df = CSV.File("CFD Lift 2412.csv", header=false) |> DataFrame
 
-# Plot the data
-p = plot(df.Column1, df.Column2)
+# Plot Third Party Data the data
+p = plot(df.Column1, df.Column2, label = "CFD Data")
 
 # Plot the coefficients
-plot!(p, aoa_range, c_m, grid=false, xlabel="Angle of Attack (degrees)", ylabel="Moment Coefficient", show=true, legend=false)
+#p = plot(aoa_range, c_l)
+
+
+
+plot!(p, aoa_range, c_l, grid=false, label =  "Generated", xlabel="Angle of Attack (degrees)", ylabel="Lift Coefficient", show=true, legend=true)
 savefig(p, "$(airfoil).pdf")
