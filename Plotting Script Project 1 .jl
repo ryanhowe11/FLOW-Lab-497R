@@ -69,8 +69,8 @@ function main(filename::String)
 end
 
 # Call the main function and store the results
-filename = "naca6412.txt"
-airfoil = "Camber Lift"
+filename = "naca2408.txt"
+airfoil = "Thickness Lift"
 xr, yr, aoa_range, c_l, c_d, c_m, complex = main(filename)
 
 # Plotting code
@@ -86,5 +86,5 @@ df = CSV.File("CFD Lift 2412.csv", header=false) |> DataFrame
 
 
 
-plot!(p, aoa_range, c_l, grid=false, label =  "NACA 6412", xlabel="Angle of Attack (degrees)", ylabel="Lift Coefficient", show=true, legend=true)
+plot!(p, aoa_range, c_l, grid=false, label =  "NACA 2408", xlabel="Angle of Attack (degrees)", ylabel="Lift Coefficient", show=true, legend=true)
 savefig(p, "$(airfoil).pdf")
