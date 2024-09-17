@@ -1,4 +1,4 @@
-using Xfoil, Plots, Printf, DelimitedFiles
+using Xfoil, Plots, Printf, DelimitedFiles, CSV, DataFrames
 pyplot()
 
 function read_airfoil_coordinates(filename::String)
@@ -74,7 +74,8 @@ function plot_coefficients(alpha::StepRange{Int64, Int64}, c_l::Vector{Float64},
     p4 = plot(c_d, c_l, title=airfoil, xlabel="Drag Coefficient", ylabel="Lift Coefficient",
         overwrite_figure=false, show=true, legend=false)
         filenamep="$(airfoil)_Drag_vs_Lift_Coefficent_Plot.pdf"
-        savefig(p4, "$(filenamep)") 
+        savefig(p4, "$(filenamep)")
+        return p1, p2, p3, p4
 end
 
 function plot_all(xr::Vector{Float64}, yr::Vector{Float64}, alpha::StepRange{Int64, Int64}, c_l::Vector{Float64}, c_d::Vector{Float64}, c_m::Vector{Float64}, airfoil)
@@ -246,4 +247,4 @@ end
 
 # Call the main function with the filename
 airfoil="NACA 2412 Re=2200000"
-main("naca2412.txt")
+main("naca6412.txt")
