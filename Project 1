@@ -1,0 +1,250 @@
+using Xfoil, Plots, Printf, DelimitedFiles, CSV, DataFrames
+pyplot()
+
+function read_airfoil_coordinates(filename::String)
+    # Read airfoil coordinates from a file
+    data = readdlm(filename)
+    
+    # Separate the columns into x and y
+    x = data[:, 1]
+    y = data[:, 2]
+
+    # Load airfoil coordinates into XFOIL
+    Xfoil.set_coordinates(x, y)
+    return x, y
+end
+
+function repanel_and_plot_airfoil()
+    # Repanel using XFOIL's `PANE` command
+    xr, yr = Xfoil.pane()
+    return xr, yr
+end
+
+function set_operating_conditions()
+    # Set operating conditions
+    alpha = -9:1:14  # Range of angle of attacks, in degrees
+    re = 2.2e6         # Reynolds number
+    mach = 0.0       # Mach #
+    complex = 0
+    gr()
+    return alpha, re, mach, complex
+end
+
+function solve_alpha(alpha::StepRange{Int64, Int64}, re::Float64)
+    # initialize outputs
+    n_a = length(alpha)
+    c_l = zeros(n_a)
+    c_d = zeros(n_a)
+    c_dp = zeros(n_a)
+    c_m = zeros(n_a)
+    converged = zeros(Bool, n_a)
+
+    # determine airfoil coefficients across a range of angle of attacks
+    for i = 1:n_a
+        c_l[i], c_d[i], c_dp[i], c_m[i], converged[i] = Xfoil.solve_alpha(alpha[i], re; iter=100, reinit=true)
+    end
+
+    # print results
+    println("Angle\t\tCl\t\tCd\t\tCm\t\tConverged")
+    for i = 1:n_a
+        @printf("%8f\t%8f\t%8f\t%8f\t%d\n",alpha[i],c_l[i],c_d[i],c_m[i],converged[i])
+    end
+    return c_l, c_d, c_m
+end
+
+function plot_airfoil(xr::Vector{Float64}, yr::Vector{Float64}, airfoil)
+    # Plot the refined airfoil geometry
+    p = scatter(xr, yr, title=airfoil, framestyle=:none, aspect_ratio=1.0, show=true, legend=false)
+    filenamep="$(airfoil)_Airfoil_Plot.pdf"
+    savefig(p, "$(filenamep)")
+end
+
+function plot_coefficients(alpha::StepRange{Int64, Int64}, c_l::Vector{Float64}, c_d::Vector{Float64}, c_m::Vector{Float64}, airfoil)
+    p1 = plot(alpha, c_l, title=airfoil, xlabel="Angle of Attack (degrees)", ylabel="Lift Coefficient", show=true, legend=false)
+        filenamep="$(airfoil)_Lift_Coefficent_Plot.pdf"
+        savefig(p1, "$(filenamep)")
+    p2 = plot(alpha, c_d, title=airfoil, xlabel="Angle of Attack (degrees)", ylabel="Drag Coefficient",
+        overwrite_figure=false, show=true, legend=false)
+        filenamep="$(airfoil)_Drag_Coefficent_Plot.pdf"
+        savefig(p2, "$(filenamep)")
+    p3 = plot(alpha, c_m, title=airfoil, xlabel="Angle of Attack (degrees)", ylabel="Moment Coefficient",
+        overwrite_figure=false, show=true, legend=false)
+        filenamep="$(airfoil)_Moment_Coefficent_Plot.pdf"
+        savefig(p3, "$(filenamep)")    
+    p4 = plot(c_d, c_l, title=airfoil, xlabel="Drag Coefficient", ylabel="Lift Coefficient",
+        overwrite_figure=false, show=true, legend=false)
+        filenamep="$(airfoil)_Drag_vs_Lift_Coefficent_Plot.pdf"
+        savefig(p4, "$(filenamep)")
+        return p1, p2, p3, p4
+end
+
+function plot_all(xr::Vector{Float64}, yr::Vector{Float64}, alpha::StepRange{Int64, Int64}, c_l::Vector{Float64}, c_d::Vector{Float64}, c_m::Vector{Float64}, airfoil)
+    plot_coefficients(alpha, c_l, c_d, c_m, airfoil)
+    plot_airfoil(xr,yr,airfoil)
+end
+
+function sensitivity_analysis(alpha::StepRange{Int64, Int64}, re::Float64, mach::Float64, filename)
+    # Read airfoil coordinates
+    x, y = read_airfoil_coordinates(filename)
+    
+    # Set operating conditions
+    alpha, re, mach = set_operating_conditions()
+    
+    # Repanel and plot airfoil
+    xr, yr = repanel_and_plot_airfoil()
+
+    # set step size
+    h = 1e-6
+
+    # initialize outputs
+    n_a = length(alpha)
+    c_l_a = zeros(n_a)
+    c_d_a = zeros(n_a)
+    c_dp_a = zeros(n_a)
+    c_m_a = zeros(n_a)
+    converged = zeros(Bool, n_a)
+
+    for i = 1:n_a
+        c_l1, c_d1, c_dp1, c_m1, converged[i] = Xfoil.solve_alpha(alpha[i], re; mach, iter=100, reinit=true)
+        c_l2, c_d2, c_dp2, c_m2, converged[i] = Xfoil.solve_alpha(alpha[i]+h, re; mach, iter=100, reinit=true)
+        c_l_a[i] = (c_l2 - c_l1)/h * 180/pi
+        c_d_a[i] = (c_d2 - c_d1)/h * 180/pi
+        c_m_a[i] = (c_m2 - c_m1)/h * 180/pi
+    end
+
+    # print results
+    println("Angle\t\tdClda\t\tdCdda\t\tdCmda\t\tConverged")
+    for i = 1:n_a
+    @printf("%8f\t%8f\t%8f\t%8f\t%d\n",alpha[i],c_l_a[i],c_d_a[i],c_m_a[i],converged[i])
+    end
+end
+
+function cs_sensitivity_analysis(filename)
+    # Read airfoil coordinates from a file
+    data = readdlm(filename)
+    
+    # Separate the columns into x and y
+    x = data[:, 1]
+    y = data[:, 2]
+    
+    Xfoil.set_coordinates_cs(x,y)
+    
+    # repanel using XFOIL's `PANE` command
+    Xfoil.pane_cs()
+    
+    # Set operating conditions
+    alpha, re, mach = set_operating_conditions()
+    
+    # set step size
+    h = 1e-12im
+    
+    # initialize outputs
+    n_a = length(alpha)
+    c_l_a = zeros(n_a)
+    c_d_a = zeros(n_a)
+    c_dp_a = zeros(n_a)
+    c_m_a = zeros(n_a)
+    converged = zeros(Bool, n_a)
+    
+    for i = 1:n_a
+        c_l, c_d, c_dp, c_m, converged[i] = Xfoil.solve_alpha_cs(alpha[i]+h, re; mach, iter=100, reinit=true)
+        c_l_a[i] = imag(c_l)/imag(h) * 180/pi
+        c_d_a[i] = imag(c_d)/imag(h) * 180/pi
+        c_m_a[i] = imag(c_m)/imag(h) * 180/pi
+    end
+    
+    # print results
+    println("Angle\t\tdClda\t\tdCdda\t\tdCmda\t\tConverged")
+    for i = 1:n_a
+      @printf("%8f\t%8f\t%8f\t%8f\t%d\n",alpha[i],c_l_a[i],c_d_a[i],c_m_a[i],converged[i])
+    end
+    
+end
+
+function Automated_Angle_of_Attack_Sweep(filename)
+    # extract geometry
+    x = Float64[]
+    y = Float64[]
+
+    f = open(filename, "r")
+
+    for line in eachline(f)
+        entries = split(chomp(line))
+        push!(x, parse(Float64, entries[1]))
+        push!(y, parse(Float64, entries[2]))
+    end
+
+    close(f)
+
+    # Set operating conditions
+    alpha, re = set_operating_conditions()
+
+    c_l, c_d, c_dp, c_m, converged = Xfoil.alpha_sweep(x, y, alpha, re, iter=100, zeroinit=false, printdata=true, reinit=true)
+end
+
+function cs_Automated_Angle_of_Attack_Sweep(filename)
+    # extract geometry
+    x = Float64[]
+    y = Float64[]
+
+    f = open(filename, "r")
+
+    for line in eachline(f)
+        entries = split(chomp(line))
+        push!(x, parse(Float64, entries[1]))
+        push!(y, parse(Float64, entries[2]))
+    end
+
+    close(f)
+
+    # Set operating conditions
+    alpha, re, mach = set_operating_conditions()
+
+    # set step size
+    h = 1e-20im
+
+    c_l, c_d, c_dp, c_m, converged = Xfoil.alpha_sweep_cs(x, y, alpha .+ h,
+        re, mach=mach, iter=100, zeroinit=false, printdata=true, reinit=true)
+
+    println("Angle\t\tdClda\t\tdCdda\t\tdCmda\t\tConverged")
+    for i = 1:length(alpha)
+        @printf("%8f\t%8f\t%8f\t%8f\t%d\n", alpha[i], imag(c_l[i])/imag(h)*180/pi, imag(c_d[i])/imag(h)*180/pi, imag(c_m[i])/imag(h)*180/pi, converged[i])
+    end
+    
+end
+
+function main(filename::String, airfoil)
+    # Read airfoil coordinates
+    x, y = read_airfoil_coordinates(filename)
+    
+    # Set operating conditions
+    alpha, re, mach, complex = set_operating_conditions()
+    
+    # Repanel and plot airfoil
+    xr, yr = repanel_and_plot_airfoil()
+
+    #Solve airfoil
+    c_l, c_d, c_m = solve_alpha(alpha, re)
+
+    #plotting function
+    plot_all(xr, yr, alpha, c_l, c_d, c_m, airfoil)
+    if complex == 1
+        #perform sensitivity sensitivity_analysis
+        sensitivity_analysis(alpha, re, mach, filename)
+
+        #Perform Angle of Attack Sweeps
+        Automated_Angle_of_Attack_Sweep(filename)
+        
+    else
+
+        #complex step method sensitivity sensitivity_analysis
+        cs_sensitivity_analysis(filename)
+
+        #Perform Angle of Attack Sweeps using Complex step method
+        cs_Automated_Angle_of_Attack_Sweep(filename)
+    end
+end
+
+# Call the main function with the filename
+airfoil="NACA 2412 Re=2200000"
+main("naca6412.txt")
