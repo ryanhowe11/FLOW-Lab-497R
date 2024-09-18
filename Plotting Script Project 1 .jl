@@ -23,7 +23,7 @@ end
 function set_operating_conditions()
     # Set operating conditions
     aoa_range = -9:1:14  # Range of angle of attacks, in degrees
-    re = 1.0e6           # Reynolds number
+    re = 1.0e5           # Reynolds number
     mach = 0.0           # Mach #
     complex = 0
     gr()
@@ -69,22 +69,22 @@ function main(filename::String)
 end
 
 # Call the main function and store the results
-filename = "naca6412.txt"
-airfoil = "Xfoil Drag"
+filename = "naca2412.txt"
+airfoil = "Moment New"
 xr, yr, aoa_range, c_l, c_d, c_m, complex = main(filename)
 
 # Plotting code
 
 # Read the Third Party Data CSV file
-df = CSV.File("6412 Drag.csv", header=false) |> DataFrame
+df = CSV.File("0012 Drag.csv", header=false) |> DataFrame
 
 # Plot Third Party Data the data
-p=plot(df.Column1, df.Column2, label = "Third Party NACA 0012")
+#plot!(p, df.Column1, df.Column2, label = "Third Party NACA 0012")
 
 # Plot the coefficients
 #p = plot(aoa_range, c_l)
 
 
 
-plot!(p, aoa_range, c_d, grid=false, label =  "Generated NACA 6412", xlabel="Angle of Attack (degrees)", ylabel="Drag Coefficient", show=true, legend=true)
+p=plot(aoa_range, c_m, grid=false, label =  "Generated NACA 0012", xlabel="Angle of Attack (degrees)", ylabel="Drag Coefficient", show=true, legend=false)
 savefig(p, "$(airfoil).pdf")
