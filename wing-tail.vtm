@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<VTKFile type="vtkMultiBlockDataSet" version="1.0" byte_order="LittleEndian">
+  <vtkMultiBlockDataSet>
+    <DataSet index="0" file="wing-tail_1.vtp"/>
+    <DataSet index="1" file="wing-tail_2.vtp"/>
+    <DataSet index="2" file="wing-tail_3.vtp"/>
+    <DataSet index="3" file="wing-tail_4.vtp"/>
+    <DataSet index="4" file="wing-tail_5.vtp"/>
+    <DataSet index="5" file="wing-tail_6.vtp"/>
+    <DataSet index="6" file="wing-tail_7.vtp"/>
+    <DataSet index="7" file="wing-tail_8.vtp"/>
+    <DataSet index="8" file="wing-tail_9.vtp"/>
+    <DataSet index="9" file="wing-tail_10.vtp"/>
+    <DataSet index="10" file="wing-tail_11.vtp"/>
+    <DataSet index="11" file="wing-tail_12.vtp"/>
+  </vtkMultiBlockDataSet>
+</VTKFile>
