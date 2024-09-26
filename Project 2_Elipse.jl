@@ -48,15 +48,16 @@ function elliptic_wing(root, span, num_sec, filename)
     return x_intersection_points, y_intersection_points, intersection_points, chord_lengths
 end
 
+for i in 1:40
 # Define inputs of function
 span = 10       
 root = 5
-num_sec = 7
+num_sec = i
 filename = "eliptic_wing_section_plot.pdf"
 x_points, y_points, points, chords = elliptic_wing(root, span, num_sec, filename)
-println("Intersection points: ", points)
-println("Section Chord Lengths: ", chords)
-println("Plot saved to ", filename)
+#println("Intersection points: ", points)
+#println("Section Chord Lengths: ", chords)
+#println("Plot saved to ", filename)
 
 # geometry (right half of the wing)
 xle = x_points
@@ -111,7 +112,7 @@ Cl, Cm, Cn = CM
 
 properties = get_surface_properties(system)
 
-write_vtk("symmetric-planar-wing", surfaces, properties; symmetric)
+#write_vtk("symmetric-planar-wing", surfaces, properties; symmetric)
 
 # construct geometry with mirror image
 grid, surface = wing_to_surface_panels(xle, yle, zle, chord, theta, phi, ns, nc;
@@ -150,4 +151,8 @@ Clr, Cmr, Cnr = dCM.r
 
 properties = get_surface_properties(system)
 
-write_vtk("mirrored-planar-wing", surfaces, properties; symmetric)
+# Calculate aerodynamic efficiency
+efficiency = CL / CD
+println("Aerodynamic Efficiency (L/D ratio): ", efficiency, " Number of Sections: ", num_sec)
+#write_vtk("mirrored-planar-wing", surfaces, properties; symmetric)
+end

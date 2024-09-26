@@ -1,6 +1,9 @@
 using VortexLattice
 using Plots
 
+dh = 24
+dv = 4
+
 # wing
 xle = [0.0, 0.2]
 yle = [0.0, 5.0]
@@ -63,14 +66,14 @@ wgrid, wing = wing_to_surface_panels(xle, yle, zle, chord, theta, phi, ns, nc;
 # generate surface panels for horizontal tail
 hgrid, htail = wing_to_surface_panels(xle_h, yle_h, zle_h, chord_h, theta_h, phi_h, ns_h, nc_h;
     mirror=mirror_h, fc=fc_h, spacing_s=spacing_s_h, spacing_c=spacing_c_h)
-VortexLattice.translate!(hgrid, [3.0, 0.0, 0.0])
-VortexLattice.translate!(htail, [3.0, 0.0, 0.0])
+VortexLattice.translate!(hgrid, [dh, 0.0, 0.0])
+VortexLattice.translate!(htail, [dh, 0.0, 0.0])
 
 # generate surface panels for vertical tail
 vgrid, vtail = wing_to_surface_panels(xle_v, yle_v, zle_v, chord_v, theta_v, phi_v, ns_v, nc_v;
     mirror=mirror_v, fc=fc_v, spacing_s=spacing_s_v, spacing_c=spacing_c_v)
-VortexLattice.translate!(vgrid, [4.0, 0.0, 0.0])
-VortexLattice.translate!(vtail, [4.0, 0.0, 0.0])
+VortexLattice.translate!(vgrid, [dv, 0.0, 0.0])
+VortexLattice.translate!(vtail, [dv, 0.0, 0.0])
 
 # now set normal vectors manually
 ncp = avl_normal_vector([xle[2]-xle[1], yle[2]-yle[1], zle[2]-zle[1]], 2.0*pi/180)
@@ -85,15 +88,15 @@ surfaces = [wing, htail, vtail]
 surface_id = [1, 2, 3]
 
 # Function to run the simulation and return coefficients
-function get_coefficients(alpha)
-fs = Freestream(Vinf, alpha, beta, Omega)
+#function get_coefficients(alpha)
+fs = Freestream(Vinf, my_alpha, beta, Omega)
 system = steady_analysis(surfaces, ref, fs; symmetric=symmetric, surface_id=surface_id)
 CF, CM = body_forces(system; frame=Stability())
 CDiff = far_field_drag(system)
 CD, CY, CL = CF
 Cl, Cm, Cn = CM
-return CD, CY, CL, Cl, Cm, Cn
-end
+#return CD, CY, CL, Cl, Cm, Cn
+#end
 
 #=
 # Define a small variation in angle of attack (1 degree in radians)
@@ -121,9 +124,9 @@ C_n_alpha = (Cn_p - Cn_m) / (2 * delta_alpha)
 dCF, dCM = stability_derivatives(system)
 
 CDa, CYa, CLa = dCF.alpha
-Cla, Cma, Cna = dCM.alpha
-CDb, CYb, CLb = dCF.beta
-Clb, Cmb, Cnb = dCM.beta
+Cla, Cma, Cna = dCM.alpha  # for horizontal tail
+CDb, CYb, CLb = dCF.beta   # for vertical tail maybe
+Clb, Cmb, Cnb = dCM.beta 
 CDp, CYp, CLp = dCF.p
 Clp, Cmp, Cnp = dCM.p
 CDq, CYq, CLq = dCF.q
@@ -131,22 +134,13 @@ Clq, Cmq, Cnq = dCM.q
 CDr, CYr, CLr = dCF.r
 Clr, Cmr, Cnr = dCM.r
 
-println("Lift curve slope (C_D_alpha): ", dCF.alpha)
-println("Lift curve slope (C_Y_alpha): ", dCM.alpha)
-println("Lift curve slope (C_L_alpha): ", dCF.beta)
-println("Lift curve slope (C_l_alpha): ", dCM.beta)
-println("Lift curve slope (C_m_alpha): ", dCF.p)
-println("Lift curve slope (C_n_alpha): ", dCM.p)
-println("Lift curve slope (C_m_alpha): ", dCF.q)
-println("Lift curve slope (C_n_alpha): ", dCM.q)
-println("Lift curve slope (C_m_alpha): ", dCF.r)
-println("Lift curve slope (C_n_alpha): ", dCM.r)
-
-
 properties = get_surface_properties(system)
 
-Vh= (3*2*xle_h[2]*yle_h[2])/(2*xle[2]*yle[2]*((chord[1]+chord[2])/2))
-Vv= (4*xle_v[2]*zle_v[2])/(2*xle[2]*yle[2]*((chord[1]+chord[2])/2))
+Vh= (dh*2*xle_h[2]*yle_h[2])/(2*xle[2]*yle[2]*((chord[1]+chord[2])/2))
+Vv= (dv*xle_v[2]*zle_v[2])/(2*xle[2]*yle[2]*2*yle[2])
+
 println("Vh=", Vh)
 println("Vv=", Vv)
-write_vtk("wing-tail", surfaces, properties; symmetric)
+
+println("Stability Derivative Pitch: ", "Cma= ", Cma,  " Cmb= ", Cmb,  " Cmp= ", Cmp,  " Cmq= ", Cmq,  " Cmr= ", Cmr)
+println("Stability Derivative Yaw: ", "Cna= ", Cna,  " Cnb= ", Cnb,  " Cnp= ", Cnp,  " Cnq= ", Cnq,  " Cnr= ", Cnr)
