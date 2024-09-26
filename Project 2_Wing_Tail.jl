@@ -1,7 +1,7 @@
 using VortexLattice
 using Plots
 
-dh = 24
+dh = 4
 dv = 4
 
 # wing

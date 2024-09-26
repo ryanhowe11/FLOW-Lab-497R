@@ -10,7 +10,7 @@ phi = [0.0, 0.0] # section rotation about the x-axis
 fc = fill((xc) -> 0, 2) # camberline function for each section (y/c = f(x/c))
 
 # Define the Number of Panels
-ns = 12 # number of spanwise panels
+ns = 14 # number of spanwise panels
 nc = 6  # number of chordwise panels
 spacing_s = Sine() # spanwise discretization scheme
 spacing_c = Uniform() # chordwise discretization scheme

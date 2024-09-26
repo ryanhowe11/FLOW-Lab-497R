@@ -41,11 +41,12 @@ function elliptic_wing(root, span, num_sec, filename)
         plot!([-x_intersect, x_intersect], [y_line, y_line])
     end
 
-
+    Area = (pi*a*b)/2
+    cref= 4/(3*pi)*root
 
     # Save the plot to a PDF file
     savefig(filename)
-    return x_intersection_points, y_intersection_points, intersection_points, chord_lengths
+    return x_intersection_points, y_intersection_points, intersection_points, chord_lengths, Area, cref, b
 end
 
 """
@@ -61,15 +62,15 @@ Create and section off an eliptic wing based on its root chord, span, and number
 - `y_intersection_points::Y locations of leading edge sections`: The y coordinate where each section starts on the leading edge
 - `intersection_points::Coordinates of sections on the leading edge`: Where each section starts on the leading edge
 - `chord_lengths::Length of section chords`: The chord length at each sectioned divide
+- `Area::Reference Area`: The reference area of the wing
 """
 
-for i in 1:40
 # Define inputs of function
 span = 10       
 root = 5
-num_sec = i
+num_sec = 3
 filename = "eliptic_wing_section_plot.pdf"
-x_points, y_points, points, chords = elliptic_wing(root, span, num_sec, filename)
+x_points, y_points, points, chords, Sref, cref, bref = elliptic_wing(root, span, num_sec, filename)
 #println("Intersection points: ", points)
 #println("Section Chord Lengths: ", chords)
 #println("Plot saved to ", filename)
@@ -84,15 +85,12 @@ phi = zeros(num_sec+1)
 fc = fill((xc) -> 0, num_sec+1)                     # camberline function for each section
 
 # discretization parameters
-ns = 12
+ns = length(yle)
 nc = 6
 spacing_s = Uniform()
 spacing_c = Uniform()
 
 # reference parameters
-Sref = 30.0
-cref = 2.0
-bref = 15.0
 rref = [0.50, 0.0, 0.0]
 Vinf = 1.0
 ref = Reference(Sref, cref, bref, rref, Vinf)
@@ -125,32 +123,6 @@ CDiff = far_field_drag(system)
 CD, CY, CL = CF
 Cl, Cm, Cn = CM
 
-properties = get_surface_properties(system)
-
-#write_vtk("symmetric-planar-wing", surfaces, properties; symmetric)
-
-# construct geometry with mirror image
-grid, surface = wing_to_surface_panels(xle, yle, zle, chord, theta, phi, ns, nc;
-    fc=fc, spacing_s=spacing_s, spacing_c=spacing_c, mirror=true)
-
-# symmetry is not used in the analysis
-symmetric = false
-
-# create vector containing all surfaces
-surfaces = [surface]
-
-# perform steady state analysis
-system = steady_analysis(surfaces, ref, fs; symmetric=symmetric)
-
-# retrieve near-field forces
-CF, CM = body_forces(system; frame=Wind())
-
-# perform far-field analysis
-CDiff = far_field_drag(system)
-
-CD, CY, CL = CF
-Cl, Cm, Cn = CM
-
 dCF, dCM = stability_derivatives(system)
 
 CDa, CYa, CLa = dCF.alpha
@@ -166,8 +138,36 @@ Clr, Cmr, Cnr = dCM.r
 
 properties = get_surface_properties(system)
 
+cf, cm = lifting_line_coefficients(system, r, c; frame=Body())
+
 # Calculate aerodynamic efficiency
-efficiency = CL / CD
-println("Aerodynamic Efficiency (L/D ratio): ", efficiency, " Number of Sections: ", num_sec)
+#println("Aerodynamic Efficiency (L/D ratio): ", efficiency, " Number of Sections: ", num_sec)
 #write_vtk("mirrored-planar-wing", surfaces, properties; symmetric)
+
+# Assuming cf is your vector of matrices
+z_direction_coefficients = []
+
+# Loop through each matrix in the cf vector
+for matrix in cf
+    # Extract the third row (z-direction force coefficients)
+    z_coefficients = matrix[3, :]
+    push!(z_direction_coefficients, z_coefficients)
 end
+
+y = collect(range(0, stop=span, step=0.1))
+
+# Calculate the ideal elliptic lift distribution
+Cl_max = maximum(lifting_coefficients)
+elliptical_distribution = Cl_max * sqrt.(1 .- (y ./ span).^2)
+
+# Convert the list of z-direction coefficients to an array if needed
+lifting_coefficients = hcat(z_direction_coefficients...)
+println(lifting_coefficients)
+println(yle)
+
+# Plot the lift distribution
+plot(yle, lifting_coefficients, label="Calculated Lift Distribution", xlabel="Spanwise Location (y)", ylabel="Lift Coefficient (Cl)")
+plot!(y, elliptical_distribution, label="Elliptical Lift Distribution", linestyle=:dash)
+
+# Save the lift distribution plot as a PDF
+savefig("Lift_Distribution_along_the_Span.pdf")
