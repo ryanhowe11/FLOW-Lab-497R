@@ -68,7 +68,7 @@ Create and section off an eliptic wing based on its root chord, span, and number
 # Define inputs of function
 span = 10       
 root = 5
-num_sec = 3
+num_sec = 11
 filename = "eliptic_wing_section_plot.pdf"
 x_points, y_points, points, chords, Sref, cref, bref = elliptic_wing(root, span, num_sec, filename)
 #println("Intersection points: ", points)
