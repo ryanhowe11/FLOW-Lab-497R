@@ -19,9 +19,9 @@ function elliptic_wing(root, span, num_sec, filename)
     y_lines = range(0, span, length=num_lines+1)
 
     intersection_points = []
-    chord_lengths = []
-    x_intersection_points = []
-    y_intersection_points = []
+    chord_lengths = Float64[]
+    x_intersection_points = Float64[]
+    y_intersection_points = Float64[]
 
     for y_line in y_lines
         x_intersect = a * sqrt(1 - (y_line / b)^2)
@@ -29,17 +29,19 @@ function elliptic_wing(root, span, num_sec, filename)
         push!(intersection_points, (x_intersect, y_line))
         
         #Update X data points
-        push!(x_intersection_points, x_intersect)
+        push!(x_intersection_points, Float64(x_intersect))
 
         #Update Y data points
-        push!(y_intersection_points, y_line)
+        push!(y_intersection_points, Float64(y_line))
 
         #Update the Chord Lengths Vector
-        push!(chord_lengths, 2*x_intersect)
+        push!(chord_lengths, Float64(2*x_intersect))
 
         # Plot the equidistant lines
         plot!([-x_intersect, x_intersect], [y_line, y_line])
     end
+
+
 
     # Save the plot to a PDF file
     savefig(filename)
@@ -63,7 +65,7 @@ zle = zeros(num_sec+1)
 chord = chords
 theta = fill(2.0*pi/180, num_sec+1)
 phi = zeros(num_sec+1)
-fc = fill(0, num_sec+1)                     # camberline function for each section
+fc = fill((xc) -> 0, num_sec+1)                     # camberline function for each section
 
 # discretization parameters
 ns = 12
@@ -87,7 +89,7 @@ fs = Freestream(Vinf, alpha_angle, beta, Omega)
 
 # construct surface
 grid, surface = wing_to_surface_panels(xle, yle, zle, chord, theta, phi, ns, nc;
-    fc = fc, spacing_s=spacing_s, spacing_c=spacing_c)
+     spacing_s=spacing_s, spacing_c=spacing_c)
 
 # create vector containing all surfaces
 surfaces = [surface]
