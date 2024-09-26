@@ -1,5 +1,11 @@
 using VortexLattice
+using Plots
 
+#Lift Coefficient setup
+CL_Vect =[]
+my_alpha = []
+
+for i in -25:25
 # geometry (right half of the wing)
 xle = [0.0, 0.4]
 yle = [0.0, 7.5]
@@ -24,7 +30,7 @@ Vinf = 1.0
 ref = Reference(Sref, cref, bref, rref, Vinf)
 
 # freestream parameters
-alpha_angle = 1.0*pi/180
+alpha_angle = i*pi/180
 beta = 0.0
 Omega = [0.0; 0.0; 0.0]
 fs = Freestream(Vinf, alpha_angle, beta, Omega)
@@ -77,19 +83,32 @@ CDiff = far_field_drag(system)
 CD, CY, CL = CF
 Cl, Cm, Cn = CM
 
-dCF, dCM = stability_derivatives(system)
+push!(CL_Vect, CL)
+push!(my_alpha, i)
 
-CDa, CYa, CLa = dCF.alpha
-Cla, Cma, Cna = dCM.alpha
-CDb, CYb, CLb = dCF.beta
-Clb, Cmb, Cnb = dCM.beta
-CDp, CYp, CLp = dCF.p
-Clp, Cmp, Cnp = dCM.p
-CDq, CYq, CLq = dCF.q
-Clq, Cmq, Cnq = dCM.q
-CDr, CYr, CLr = dCF.r
-Clr, Cmr, Cnr = dCM.r
+#dCF, dCM = stability_derivatives(system)
 
-properties = get_surface_properties(system)
+#CDa, CYa, CLa = dCF.alpha
+#Cla, Cma, Cna = dCM.alpha
+#CDb, CYb, CLb = dCF.beta
+#Clb, Cmb, Cnb = dCM.beta
+#CDp, CYp, CLp = dCF.p
+#Clp, Cmp, Cnp = dCM.p
+#CDq, CYq, CLq = dCF.q
+#Clq, Cmq, Cnq = dCM.q
+#CDr, CYr, CLr = dCF.r
+#Clr, Cmr, Cnr = dCM.r
 
-write_vtk("mirrored-planar-wing", surfaces, properties; symmetric)
+#properties = get_surface_properties(system)
+
+#write_vtk("mirrored-planar-wing", surfaces, properties; symmetric)
+end
+
+println(CL_Vect)
+println(my_alpha)
+
+# Plotting
+plot(my_alpha, CL_Vect, xlabel="alpha", ylabel="Lift Coefficient", legend=false)
+
+# Save the plot to a PDF file
+savefig("Lift Coefficient vs Angle of Attack.pdf")
