@@ -48,6 +48,21 @@ function elliptic_wing(root, span, num_sec, filename)
     return x_intersection_points, y_intersection_points, intersection_points, chord_lengths
 end
 
+"""
+    elliptic_wing(root, span, num_sec, filename)
+Create and section off an eliptic wing based on its root chord, span, and number of sections
+**Arguments**
+- `root::Root Chord`: Root Chord of the Wing
+- `span::Wing Span`: Span of one wing in isolation
+- `num_sec::Number of Sections`: How many sections you want the wing to be discretized into
+- `filename::Filename`: File name for a plot of the resulting sectioned wing 
+- **Returns**
+- `x_intersection_points::X locations of leading edge sections`: The x coordinate where each section starts on the leading edge
+- `y_intersection_points::Y locations of leading edge sections`: The y coordinate where each section starts on the leading edge
+- `intersection_points::Coordinates of sections on the leading edge`: Where each section starts on the leading edge
+- `chord_lengths::Length of section chords`: The chord length at each sectioned divide
+"""
+
 for i in 1:40
 # Define inputs of function
 span = 10       
