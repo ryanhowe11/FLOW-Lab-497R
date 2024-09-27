@@ -138,6 +138,8 @@ Clr, Cmr, Cnr = dCM.r
 
 properties = get_surface_properties(system)
 
+r, c = lifting_line_geometry(grid, 0.25)
+
 cf, cm = lifting_line_coefficients(system, r, c; frame=Body())
 
 # Calculate aerodynamic efficiency
