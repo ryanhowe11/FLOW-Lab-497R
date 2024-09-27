@@ -1,5 +1,8 @@
 using Plots
 using VortexLattice
+using QuadGK
+using Interpolations
+using Trapz
 
 function elliptic_wing(root, span, num_sec, filename)
     a = root / 2                # Root length
@@ -16,7 +19,7 @@ function elliptic_wing(root, span, num_sec, filename)
     ylabel!("span")
 
     # Calculate the y-coordinates of the equidistant lines
-    y_lines = range(0, span, length=num_lines+1)
+    y_lines = range(0, span-.001, length=num_lines+1)
 
     intersection_points = []
     chord_lengths = Float64[]
@@ -29,7 +32,7 @@ function elliptic_wing(root, span, num_sec, filename)
         push!(intersection_points, (x_intersect, y_line))
         
         #Update X data points
-        push!(x_intersection_points, Float64(x_intersect))
+        push!(x_intersection_points, Float64(-x_intersect+a))
 
         #Update Y data points
         push!(y_intersection_points, Float64(y_line))
@@ -41,12 +44,12 @@ function elliptic_wing(root, span, num_sec, filename)
         plot!([-x_intersect, x_intersect], [y_line, y_line])
     end
 
-    Area = (pi*a*b)/2
+    Area = (pi*a*b)
     cref= 4/(3*pi)*root
-
+    bref=span
     # Save the plot to a PDF file
     savefig(filename)
-    return x_intersection_points, y_intersection_points, intersection_points, chord_lengths, Area, cref, b
+    return x_intersection_points, y_intersection_points, intersection_points, chord_lengths, Area, cref, bref
 end
 
 """
@@ -67,8 +70,8 @@ Create and section off an eliptic wing based on its root chord, span, and number
 
 # Define inputs of function
 span = 10       
-root = 5
-num_sec = 11
+root = 3
+num_sec = 24
 filename = "eliptic_wing_section_plot.pdf"
 x_points, y_points, points, chords, Sref, cref, bref = elliptic_wing(root, span, num_sec, filename)
 #println("Intersection points: ", points)
@@ -86,7 +89,7 @@ fc = fill((xc) -> 0, num_sec+1)                     # camberline function for ea
 
 # discretization parameters
 ns = length(yle)
-nc = 6
+nc = 1
 spacing_s = Uniform()
 spacing_c = Uniform()
 
@@ -94,6 +97,7 @@ spacing_c = Uniform()
 rref = [0.50, 0.0, 0.0]
 Vinf = 1.0
 ref = Reference(Sref, cref, bref, rref, Vinf)
+rho = 1.225
 
 # freestream parameters
 alpha_angle = 1.0*pi/180
@@ -103,7 +107,7 @@ fs = Freestream(Vinf, alpha_angle, beta, Omega)
 
 # construct surface
 grid, surface = wing_to_surface_panels(xle, yle, zle, chord, theta, phi, ns, nc;
-     spacing_s=spacing_s, spacing_c=spacing_c)
+    spacing_s=spacing_s, spacing_c=spacing_c)
 
 # create vector containing all surfaces
 surfaces = [surface]
@@ -138,13 +142,15 @@ Clr, Cmr, Cnr = dCM.r
 
 properties = get_surface_properties(system)
 
-r, c = lifting_line_geometry(grid, 0.25)
+grids=[grid]
 
-cf, cm = lifting_line_coefficients(system, r, c; frame=Body())
+r, c = lifting_line_geometry(grids, 0.25)
+
+cf, cm = lifting_line_coefficients(system, r, c; frame=Wind())
 
 # Calculate aerodynamic efficiency
 #println("Aerodynamic Efficiency (L/D ratio): ", efficiency, " Number of Sections: ", num_sec)
-#write_vtk("mirrored-planar-wing", surfaces, properties; symmetric)
+write_vtk("elliptic-mirrored-planar-wing", surfaces, properties; symmetric)
 
 # Assuming cf is your vector of matrices
 z_direction_coefficients = []
@@ -158,18 +164,27 @@ end
 
 y = collect(range(0, stop=span, step=0.1))
 
-# Calculate the ideal elliptic lift distribution
-Cl_max = maximum(lifting_coefficients)
-elliptical_distribution = Cl_max * sqrt.(1 .- (y ./ span).^2)
-
 # Convert the list of z-direction coefficients to an array if needed
 lifting_coefficients = hcat(z_direction_coefficients...)
-println(lifting_coefficients)
-println(yle)
+
+Lift_prime = .5*rho*Vinf^2*lifting_coefficients[:, 1] .* chords
+
+area_prime = trapz(yle, Lift_prime)
+
+bprime = span
+aprime = 4*area_prime/(bprime*pi)
+
+# Calculate the ideal elliptic lift distribution
+θ = range(0, π/2, length=100)
+x = bprime * cos.(θ)
+y = aprime * sin.(θ)
+#Cl_max = maximum(Lift_prime)
+#elliptical_distribution = Cl_max * sqrt.(1 .- (y ./ span).^2)
 
 # Plot the lift distribution
-plot(yle, lifting_coefficients, label="Calculated Lift Distribution", xlabel="Spanwise Location (y)", ylabel="Lift Coefficient (Cl)")
-plot!(y, elliptical_distribution, label="Elliptical Lift Distribution", linestyle=:dash)
+plot(yle, Lift_prime, label="Calculated Lift Distribution", xlabel="Spanwise Location (y)", ylabel="Lift Coefficient (Cl)")
+#plot!(y, elliptical_distribution, label="Elliptical Lift Distribution", linestyle=:dash)
+plot!(x, y, linestyle=:dash)
 
 # Save the lift distribution plot as a PDF
 savefig("Lift_Distribution_along_the_Span.pdf")
