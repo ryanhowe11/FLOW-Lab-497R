@@ -11,7 +11,7 @@ function tapered_wing(root, span, tip, num_sec, filename)
     x = [-a, a, c, -c, -a]
     y = [0, 0, b, b, 0]
 
-    plot(x, y, aspect_ratio=:equal, legend = false)
+    #plot(x, y, aspect_ratio=:equal, legend = false)
     xlabel!("root")
     ylabel!("span")
 
@@ -39,19 +39,19 @@ function tapered_wing(root, span, tip, num_sec, filename)
         push!(chord_lengths, Float64(2*x_intersect))
 
         # Plot the equidistant lines
-        plot!([-x_intersect, x_intersect], [y_line, y_line])
+        #plot!([-x_intersect, x_intersect], [y_line, y_line])
     end
 
 
 
     # Save the plot to a PDF file
-    savefig(filename)
+    #savefig(filename)
 
     Area = span*(tip+root)/2
     cref= (tip+root)/2
     bref=2*span
     # Save the plot to a PDF file
-    savefig(filename)
+    #savefig(filename)
     return x_intersection_points, y_intersection_points, intersection_points, chord_lengths, Area, cref, bref
 end
 
@@ -75,8 +75,8 @@ Create and section off an eliptic wing based on its root chord, span, and number
 # Define inputs of function
 span = 10       
 root = 3
-tip = 1.5
-num_sec = 20
+tip = 3
+num_sec = 25
 filename = "tapered_wing_section_plot.pdf"
 x_points, y_points, points, chords, Sref, cref, bref = tapered_wing(root, span, tip, num_sec, filename)
 #println("Intersection points: ", points)
@@ -188,9 +188,9 @@ y = aprime * sin.(θ)
 #elliptical_distribution = Cl_max * sqrt.(1 .- (y ./ span).^2)
 
 # Plot the lift distribution
-plot(yle, Lift_prime, label="Calculated Lift Distribution", xlabel="Spanwise Location (y)", ylabel="Lift Coefficient (Cl)")
+plot!(yle, Lift_prime, label="Calculated Lift Distribution Rectangular", xlabel="Spanwise Location (y)", ylabel="Lift Coefficient (Cl)")
 #plot!(y, elliptical_distribution, label="Elliptical Lift Distribution", linestyle=:dash)
-plot!(x, y, linestyle=:dash)
+plot!(x, y, linestyle=:dash, label="Ideal Elliptic Lift Distribution Rectangular", legend=:bottomleft)
 
 # Save the lift distribution plot as a PDF
-savefig("Lift_Distribution_along_the_Span_taper.pdf")
+savefig("Lift_Distribution_along_the_Span_taper_Iteration_2.pdf")
