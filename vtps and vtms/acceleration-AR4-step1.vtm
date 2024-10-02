@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<VTKFile type="vtkMultiBlockDataSet" version="1.0" byte_order="LittleEndian">
+  <vtkMultiBlockDataSet>
+    <DataSet index="0" file="acceleration-AR4-step1_1.vtp"/>
+    <DataSet index="1" file="acceleration-AR4-step1_2.vtp"/>
+    <DataSet index="2" file="acceleration-AR4-step1_3.vtp"/>
+    <DataSet index="3" file="acceleration-AR4-step1_4.vtp"/>
+    <DataSet index="4" file="acceleration-AR4-step1_5.vtp"/>
+    <DataSet index="5" file="acceleration-AR4-step1_6.vtp"/>
+  </vtkMultiBlockDataSet>
+</VTKFile>
