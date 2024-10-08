@@ -3,7 +3,7 @@ using VortexLattice
 using QuadGK
 using Interpolations
 using Trapz
-
+#=
 function elliptic_wing(root, span, num_sec, filename)
     a = root / 2                # Root length
     b = span                    # Span of a half set of wings
@@ -51,6 +51,7 @@ function elliptic_wing(root, span, num_sec, filename)
     #savefig(filename)
     return x_intersection_points, y_intersection_points, intersection_points, chord_lengths, Area, cref, bref
 end
+=#
 
 """
     elliptic_wing(root, span, num_sec, filename)
@@ -68,28 +69,26 @@ Create and section off an eliptic wing based on its root chord, span, and number
 - `Area::Reference Area`: The reference area of the wing
 """
 
+L=.5*p*1^2*A*CL
+
 # Define inputs of function
-span = 10       
-root = 3
-num_sec = 48
+span = 4 #one wing or the whole span       
+root = x1
 filename = "eliptic_wing_section_plot.pdf"
-x_points, y_points, points, chords, Sref, cref, bref = elliptic_wing(root, span, num_sec, filename)
-#println("Intersection points: ", points)
-#println("Section Chord Lengths: ", chords)
-#println("Plot saved to ", filename)
+
 # geometry (right half of the wing)
-xle = x_points
-yle = y_points
-zle = zeros(num_sec+1)
-chord = chords
-theta = fill(2.0*pi/180, num_sec+1)
+xle = (x1, x2, x3,x4, x5, x6, x7)
+yle = (y1, y2, y3, y4, y5, y6, y7)
+zle = (0, 0, 0, 0, 0, 0 ,0)
+chord = (c1, c2, c3, c4, c5, c6, c7)
+theta = fill(5*pi/180, num_sec+1)
 phi = zeros(num_sec+1)
 fc = fill((xc) -> 0, num_sec+1)                     # camberline function for each section
 println(xle)
 println(yle)
 # discretization parameters
-ns = length(yle)
-nc = 1
+ns = 7
+nc = 6
 spacing_s = Uniform()
 spacing_c = Uniform()
 
@@ -100,7 +99,7 @@ ref = Reference(Sref, cref, bref, rref, Vinf)
 rho = 1.225
 
 # freestream parameters
-alpha_angle = 1.0*pi/180
+alpha_angle = 5.0*pi/180
 beta = 0.0
 Omega = [0.0; 0.0; 0.0]
 fs = Freestream(Vinf, alpha_angle, beta, Omega)
@@ -148,43 +147,10 @@ r, c = lifting_line_geometry(grids, 0.25)
 
 cf, cm = lifting_line_coefficients(system, r, c; frame=Wind())
 
-# Calculate aerodynamic efficiency
-#println("Aerodynamic Efficiency (L/D ratio): ", efficiency, " Number of Sections: ", num_sec)
-write_vtk("elliptic-mirrored-planar-wing", surfaces, properties; symmetric)
+chord=[3, 2.75, 2.5, 2.25, 2, 1.]
 
-# Assuming cf is your vector of matrices
-z_direction_coefficients = []
-
-# Loop through each matrix in the cf vector
-for matrix in cf
-    # Extract the third row (z-direction force coefficients)
-    z_coefficients = matrix[3, :]
-    push!(z_direction_coefficients, z_coefficients)
+for i = 1:ns-1
+A+=((chord[i]+chord[i+1])/2)*(yle[i+1]-yle[i])
 end
 
-y = collect(range(0, stop=span, step=0.1))
-
-# Convert the list of z-direction coefficients to an array if needed
-lifting_coefficients = hcat(z_direction_coefficients...)
-
-Lift_prime = .5*rho*Vinf^2*lifting_coefficients[:, 1] .* chords
-
-area_prime = trapz(yle, Lift_prime)
-
-bprime = span
-aprime = 4*area_prime/(bprime*pi)
-
-# Calculate the ideal elliptic lift distribution
-θ = range(0, π/2, length=100)
-x = bprime * cos.(θ)
-y = aprime * sin.(θ)
-#Cl_max = maximum(Lift_prime)
-#elliptical_distribution = Cl_max * sqrt.(1 .- (y ./ span).^2)
-
-# Plot the lift distribution
-plot(yle, Lift_prime, label="Calculated Lift Distribution with 48 Sections", xlabel="Spanwise Location (y)", ylabel="Lift Coefficient (Cl)")
-#plot!(y, elliptical_distribution, label="Elliptical Lift Distribution", linestyle=:dash)
-#plot!(x, y, linestyle=:dash, label="Elliptical Lift Distribution for 3 Sections", legend=:bottomleft)
-
-# Save the lift distribution plot as a PDF
-savefig("Lift_Distribution_along_the_Span_Experiments.pdf")
+L=.5*rho*Vinf^2*A*CL
