@@ -6,6 +6,7 @@ using Trapz
 using SNOW
 using Ipopt
 
+
 # Define inputs of function
 span = 4 #one wing or the whole span       
 rho = 1.225
@@ -19,14 +20,10 @@ function wing_optimizer()
     #Define variables
     @variable(model, x[1:7])
     @variable(model, c[1:7])
-    
-    #Create initial arrays for x and c
-    initial_x_values = zeros(7)
-    initial_c_values = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
 
     for i in 1:6
-        set_start_value(x[i], initial_x_values[i])
-        set_start_value(c[i], initial_c_values[i])
+        set_start_value(x[i], 0)
+        set_start_value(c[i], 1)
     end
 
     #=
