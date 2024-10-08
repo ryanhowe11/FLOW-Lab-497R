@@ -6,6 +6,10 @@ using Trapz
 using SNOW
 using Ipopt
 
+checkallocations = false
+snopttest = false
+
+@testset "derivatives" begin
 
 # Define inputs of function
 span = 4 #one wing or the whole span       
@@ -14,7 +18,7 @@ weight = 1.7
 Vinf = 1.0
 
 #Creating the optimization problem
-function wing_optimizer()
+function wing_optimizer!(x, c)
     model = Model(Ipopt.Optimizer)
 
     #Define variables
