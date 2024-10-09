@@ -4,7 +4,7 @@ using Ipopt
 using FiniteDiff
 using ForwardDiff
 
-global num_sec = 8
+global num_sec = 9
 
 #Creating the optimization problem
 function wing_optimizer(g, c)
