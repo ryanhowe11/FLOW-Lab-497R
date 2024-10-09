@@ -14,22 +14,21 @@ weight = 1.7
 Vinf = 1.0
 
 # geometry (right half of the wing)
-yle = (0, 2/3, 4/3, 2, 8/3, 10/3, 4)
-zle = (0, 0, 0, 0, 0, 0, 0)
-theta = fill(0, 7)
-phi = zeros(7)
-chords=c
-fc = fill((xc) -> 0, 7)                     # camberline function for each section
-
-xle=zeros(7)
+yle = [0.0, 0.667, 1.333, 2.0, 2.667, 3.333, 4.0]
+zle = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+theta = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+phi = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+chords = c
+fc = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]  # camberline function for each section
+xle = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
 for i in 1:6
-xle[i+1]=c[i]/4-c[i+1]/4
+    xle[i+1] = chords[i]/4 - chords[i+1]/4
 end
 
 
 # discretization parameters
-ns = 7
+ns = 6
 nc = 6
 spacing_s = Uniform()
 spacing_c = Uniform()
@@ -82,21 +81,29 @@ write_vtk("optimized-symmetric-planar-wing", surfaces, properties; symmetric)
 D=.5*rho*Vinf^2*Sref*CD
 
 g[1]=.5*rho*Vinf^2*Sref*CL-weight
-
-for i in 1:6
-g[1+i]=x[i]-x[i+1]
-g[8+i]=c[i+1]-c[i]
-end
+g[2]=xle[1]-xle[2]
+g[3]=xle[2]-xle[3]
+g[4]=xle[3]-xle[4]
+g[5]=xle[4]-xle[5]
+g[6]=xle[5]-xle[6]
+g[7]=xle[6]-xle[7]
+g[8]=c[2]-c[1]
+g[9]=c[3]-c[2]
+g[10]=c[4]-c[3]
+g[11]=c[5]-c[4]
+g[12]=c[6]-c[5]
+g[12]=c[7]-c[6]
 
 return D
 end
 
-c0 = [1.0; 1.0; 1.0; 1.0; 1.0; 1.0; 1.0]  # starting point
+c0 = [1.0; .9; .8; .7; .6; .5; .4]  # starting point
 lc = [0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01]  # lower bounds on x
-uc = [5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0]  # upper bounds on x
+uc = [5.0, 5, 5, 5, 5, 5, 5]  # upper bounds on x
 ng = 13  # number of constraints
 lg = -Inf*one(ng)  # lower bounds on g
 ug = zeros(ng)  # upper bounds on g
+g = [0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0; 0.0]
 
 # ----- set some options ------
 ip_options = Dict(

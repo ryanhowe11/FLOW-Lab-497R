@@ -1,4 +1,3 @@
-
 using Plots
 using VortexLattice
 using QuadGK
@@ -7,141 +6,136 @@ using Trapz
 using SNOW
 using Ipopt
 
-
 # Define inputs of function
-span = 4 #one wing or the whole span       
+span = 4 # one wing or the whole span       
 rho = 1.225
 weight = 1.7
 Vinf = 1.0
 
-#Creating the optimization problem
-function wing_optimizer()
-    model = Model(Ipopt.Optimizer)
+# Objective function to minimize drag
+function objective(xc)
+    x, c = xc[1:7], xc[8:14]
+    
+    # Geometry (right half of the wing)
+    xle = x
+    yle = [0, 2/3, 4/3, 2, 8/3, 10/3, 4]
+    zle = [0, 0, 0, 0, 0, 0, 0]
+    chord = c
+    theta = fill(0, 7)
+    phi = zeros(7)
+    fc = fill((xc) -> 0, 7)  # camberline function for each section
 
-    #Define variables
-    @variable(model, x[1:7])
-    @variable(model, c[1:7])
+    # Discretization parameters
+    ns = 7
+    nc = 6
+    spacing_s = Uniform()
+    spacing_c = Uniform()
 
-    for i in 1:6
-        set_start_value(x[i], 0)
-        set_start_value(c[i], 1)
-    end
+    # Reference Area Calculation
+    Sref = sum(((chord[i] + chord[i+1]) / 2) * (yle[i+1] - yle[i]) for i in 1:6)
 
-    #=
-    @variable(model, x[1] == 0.0)
-    @variable(model, x[2] == 0.0)
-    @variable(model, x[3] == 0.0)
-    @variable(model, x[4] == 0.0)
-    @variable(model, x[5] == 0.0)
-    @variable(model, x[6] == 0.0)
-    @variable(model, x[7] == 0.0)
+    # Reference parameters
+    rref = [0.50, 0.0, 0.0]
+    ref = Reference(Sref, x, span, rref, Vinf)
 
-    @variable(model, c[1] == 4.0)
-    @variable(model, c[2] == 4.0)
-    @variable(model, c[3] == 4.0)
-    @variable(model, c[4] == 4.0)
-    @variable(model, c[5] == 4.0)
-    @variable(model, c[6] == 4.0)
-    @variable(model, c[7] == 4.0)
-=#
+    # Freestream parameters
+    alpha_angle = 5.0 * pi / 180
+    beta = 0.0
+    Omega = [0.0; 0.0; 0.0]
+    fs = Freestream(Vinf, alpha_angle, beta, Omega)
 
-    #Define constraints for the Optimizer
-    for i in 1:6
-        @constraint(model, x[i+1] >= x[i])
-        @constraint(model, c[i] >= c[i+1])
-    end
+    # Construct surface
+    grid, surface = wing_to_surface_panels(xle, yle, zle, chord, theta, phi, ns, nc;
+                                           spacing_s=spacing_s, spacing_c=spacing_c)
 
-# geometry (right half of the wing)
-xle = x
-yle = (0, 2/3, 4/3, 2, 8/3, 10/3, 4)
-zle = (0, 0, 0, 0, 0, 0 ,0)
-chord = c
-theta = fill(0, 7)
-phi = zeros(7)
-fc = fill((xc) -> 0, 7)                     # camberline function for each section
+    # Create vector containing all surfaces
+    surfaces = [surface]
 
-# discretization parameters
-ns = 7
-nc = 6
-spacing_s = Uniform()
-spacing_c = Uniform()
+    # Perform steady state analysis
+    system = steady_analysis(surfaces, ref, fs; symmetric=true)
 
-Sref= 0.0
+    # Retrieve near-field forces
+    CF, CM = body_forces(system; frame=Wind())
+    CD, CY, CL = CF
 
-# Reference Area Calculation
-for i in 1:6
-    global Sref
-    Sref += ((chord[i] + chord[i+1]) / 2) * (yle[i+1] - yle[i])
+    # Drag calculation
+    D = 0.5 * rho * Vinf^2 * Sref * CD
+
+    return D
 end
 
-# reference parameters
-rref = [0.50, 0.0, 0.0]
-ref = Reference(Sref, x[1], span, rref, Vinf)
+# Constraint function for lift
+function constraints(xc)
+    x, c = xc[1:7], xc[8:14]
+    
+    # Geometry (right half of the wing)
+    xle = x
+    yle = [0, 2/3, 4/3, 2, 8/3, 10/3, 4]
+    zle = [0, 0, 0, 0, 0, 0, 0]
+    chord = c
+    theta = fill(0, 7)
+    phi = zeros(7)
+    fc = fill((xc) -> 0, 7)  # camberline function for each section
 
+    # Discretization parameters
+    ns = 7
+    nc = 6
+    spacing_s = Uniform()
+    spacing_c = Uniform()
 
-# freestream parameters
-alpha_angle = 5.0*pi/180
-beta = 0.0
-Omega = [0.0; 0.0; 0.0]
-fs = Freestream(Vinf, alpha_angle, beta, Omega)
+    # Reference Area Calculation
+    Sref = sum(((chord[i] + chord[i+1]) / 2) * (yle[i+1] - yle[i]) for i in 1:6)
 
-# construct surface
-grid, surface = wing_to_surface_panels(xle, yle, zle, chord, theta, phi, ns, nc;
-    spacing_s=spacing_s, spacing_c=spacing_c)
+    # Reference parameters
+    rref = [0.50, 0.0, 0.0]
+    ref = Reference(Sref, x, span, rref, Vinf)
 
-# create vector containing all surfaces
-surfaces = [surface]
+    # Freestream parameters
+    alpha_angle = 5.0 * pi / 180
+    beta = 0.0
+    Omega = [0.0; 0.0; 0.0]
+    fs = Freestream(Vinf, alpha_angle, beta, Omega)
 
-# we can use symmetry since the geometry and flow conditions are symmetric about the X-Z axis
-symmetric = true
+    # Construct surface
+    grid, surface = wing_to_surface_panels(xle, yle, zle, chord, theta, phi, ns, nc;
+                                           spacing_s=spacing_s, spacing_c=spacing_c)
 
-# perform steady state analysis
-system = steady_analysis(surfaces, ref, fs; symmetric=symmetric)
+    # Create vector containing all surfaces
+    surfaces = [surface]
 
-# retrieve near-field forces
-CF, CM = body_forces(system; frame=Wind())
+    # Perform steady state analysis
+    system = steady_analysis(surfaces, ref, fs; symmetric=true)
 
-CD, CY, CL = CF
-Cl, Cm, Cn = CM
+    # Retrieve near-field forces
+    CF, CM = body_forces(system; frame=Wind())
+    CD, CY, CL = CF
 
-properties = get_surface_properties(system)
+    # Lift calculation
+    L = 0.5 * rho * Vinf^2 * Sref * CL
 
-write_vtk("optimized-symmetric-planar-wing", surfaces, properties; symmetric)
+    return [L - weight]
+end
 
-L=.5*rho*Vinf^2*Sref*CL
-D=.5*rho*Vinf^2*Sref*CD
+# Creating the optimization problem
+function wing_optimizer()
+    # Initial guess
+    x0 = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
 
-#Set forth objective to minimize drag
-@objective(model, Min, D)
+    # Lower and upper bounds
+    lb = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    ub = [Inf, Inf, Inf, Inf, Inf, Inf, Inf, Inf, Inf, Inf, Inf, Inf, Inf, Inf]
 
-#Lift constraint
-@constraint(model, L >= weight)
+    # Define the optimization problem
+    prob = SNOW.OptimizationProblem(objective, constraints, x0, lb, ub)
 
-# Solve the optimization problem
-optimize!(model)
+    # Solve the optimization problem using Ipopt
+    result = SNOW.optimize(prob, Ipopt.Optimizer)
 
-# Extract optimized values
-x_opt = value.(x)
-c_opt = value.(c)
+    # Extract optimized values
+    x_opt = result.minimizer[1:7]
+    c_opt = result.minimizer[8:14]
 
-#update the geometry with optimized values
-xle_opt = x_opt
-chord_opt = c_opt
-
-# reconstruct surface
-grid_opt, surface_opt = wing_to_surface_panels(xle_opt, yle, zle, chord_opt, theta, phi, ns, nc;
-    spacing_s=spacing_s, spacing_c=spacing_c)
-
-# create vector containing all surfaces
-surfaces_opt = [surface_opt]
-
-system = steady_analysis(surfaces_opt, ref, fs; symmetric=symmetric)
-
-properties_opt = get_surface_properties(system)
-
-write_vtk("symmetric-planar-wing", surfaces_opt, properties_opt; symmetric=true)
-
-return x_opt, c_opt
+    return x_opt, c_opt
 end
 
 x_opt, c_opt = wing_optimizer()
