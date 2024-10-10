@@ -3,9 +3,10 @@ using SNOW
 using Ipopt
 using FiniteDiff
 using ForwardDiff
+using Plots
 
-global num_sec = 9
-
+global num_sec = 20
+global sec_2 = Int(.5*num_sec)
 #Creating the optimization problem
 function wing_optimizer(g, c)
 
@@ -91,6 +92,7 @@ properties = get_surface_properties(system)
 D=.5*rho*Vinf^2*Sref*CD
 
 g[1]=weight-.5*rho*Vinf^2*Sref*CL
+
 # Calculate xle differences
 for i in 1:num_sec
     g[i+1] = xle[i] - xle[i+1]
@@ -102,14 +104,31 @@ for i in 1:num_sec
 end
 
 
+for i in 1:sec_2
+g[i+1+2*num_sec]=c[i]-c[i+1]-.5
+end
+
+
 return D
 end
 
+
 # Initialize vectors based on num_sec
 c0 = ones(num_sec+1)  # starting point
+
+if num_sec >= length(chord_opt)
+for i in 1:length(chord_opt)
+c0[i]=chord_opt[i]
+end
+else
+    for i in 1:num_sec
+    c0[i]=chord_opt[i]
+    end
+end
+
 lc = fill(0.01, num_sec+1)  # lower bounds on x
 uc = fill(5.0, num_sec+1)  # upper bounds on x
-ng = 1 + 2*num_sec  # number of constraints
+ng = 1 + sec_2 + 2*num_sec  # number of constraints
 lg = -Inf*one(ng)  # lower bounds on g
 ug = zeros(ng)  # upper bounds on g
 g = zeros(ng)
@@ -189,3 +208,21 @@ write_vtk("optimized-symmetric-planar-wing", surfaces_opt, properties_opt; symme
 
 println("Optimized leading edge values: ", xle_opt)
 println("Optimized chord values: ", chord_opt)
+
+# Plotting function
+function plot_chords(xle_opt, yle, chords)
+    plot()
+    for i in 1:num_sec
+        x_start = xle_opt[i]
+        y_start = yle[i]
+        x_end = x_start + chords[i]
+        y_end = y_start
+        plot!([x_start, x_end], [y_start, y_end], label="Chord $i", lw=2)
+    end
+    xlabel!("yle")
+    ylabel!("xle_opt / Chord length")
+    title!("Chords at Each Section")
+end
+
+# Plot the chords
+plot_chords(xle_opt, yle, chord_opt)
