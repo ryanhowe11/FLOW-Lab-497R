@@ -45,8 +45,7 @@ for i in 1:num_sec
     Sref=S+Sref
 end
 
-root=chords[1]
-cref= 4/(3*pi)*root
+cref= Sref/span
 
 # reference parameters
 rref = [0.50, 0.0, 0.0]
@@ -93,20 +92,21 @@ properties = get_surface_properties(system)
 D=.5*rho*Vinf^2*Sref*CD
 
 g[1]=weight-.5*rho*Vinf^2*Sref*CL
+g[2]=c[1]-c[2]-.02
 
 # Calculate xle differences
 for i in 1:num_sec
-    g[i+1] = xle[i] - xle[i+1]
+    g[i+2] = xle[i] - xle[i+1]
 end
 
 # Calculate chord differences
 for i in 1:num_sec
-    g[i+num_sec+1] = c[i+1] - c[i]
+    g[i+num_sec+2] = c[i+1] - c[i]
 end
 
 
 for i in 1:sec_2
-g[i+1+2*num_sec]=c[i]-c[i+1]-.5
+g[i+2+2*num_sec]=c[i]-c[i+1]-.5
 end
 
 
@@ -129,7 +129,7 @@ end
 
 lc = fill(0.01, num_sec+1)  # lower bounds on x
 uc = fill(5.0, num_sec+1)  # upper bounds on x
-ng = 1 + sec_2 + 2*num_sec  # number of constraints
+ng = 2 + sec_2 + 2*num_sec  # number of constraints
 lg = -Inf*one(ng)  # lower bounds on g
 ug = zeros(ng)  # upper bounds on g
 g = zeros(ng)
@@ -180,8 +180,7 @@ for i in 1:num_sec
     Sref=S+Sref
 end
 
-root=chord_opt[1]
-cref= 4/(3*pi)*root
+cref= Sref/span
 
 # reference parameters
 rref = [0.50, 0.0, 0.0]
