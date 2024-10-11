@@ -9,7 +9,7 @@ global num_sec = 20
 global sec_2 = Int(.5*num_sec)
 global scale_factor = 1
 #Creating the optimization problem
-function wing_optimizer(g, c)
+function wing_optimizer(g, c, a)
 
 # Define inputs of function
 span = 8.0 #one wing or the whole span       
@@ -54,7 +54,7 @@ ref = Reference(Sref, cref, span, rref, Vinf)
 
 
 # freestream parameters
-alpha_angle = 5.0*pi/180
+alpha_angle = a*pi/180
 beta = 0.0
 Omega = [0.0; 0.0; 0.0]
 fs = Freestream(Vinf, alpha_angle, beta, Omega)
