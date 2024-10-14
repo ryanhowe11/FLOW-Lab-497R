@@ -95,7 +95,7 @@ function wing_optimizer(g, theta)
 
     # Calculate chord differences
     for i in 1:num_sec
-        g[i+1] = theta[i] - theta[i+1]
+        g[i+1] = theta[i] - theta[i+1]#+.25/num_sec
     end
 
     return D
