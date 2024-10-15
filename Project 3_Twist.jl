@@ -21,8 +21,8 @@ function wing_optimizer(g, theta)
     yle = [i * (span / (num_sec)) for i in 0:(num_sec)]
     zle = zeros(num_sec+1)
     chords = ones(num_sec+1)
-    theta = theta
-    phi = zeros(num_sec+1)
+    phi = theta
+    theta = zeros(num_sec+1)
     fc = zeros(num_sec+1)
     xle = zeros(num_sec+1)
     c=zeros(num_sec+1)
@@ -95,7 +95,7 @@ function wing_optimizer(g, theta)
 
     # Calculate chord differences
     for i in 1:num_sec
-        g[i+1] = theta[i] - theta[i+1]#+.25/num_sec
+        g[i+1] = phi[i] - phi[i+1]#+.25/num_sec
     end
 
     return D
@@ -149,8 +149,8 @@ symmetric = true
 # geometry (right half of the wing)
 yle = [i * (span / (num_sec)) for i in 0:(num_sec)]
 zle = zeros(num_sec+1)
-theta = thetaopt
-phi = zeros(num_sec+1)
+phi = thetaopt
+theta = zeros(num_sec+1)
 c = zeros(num_sec+1)
 
 spacing_s = Uniform()
