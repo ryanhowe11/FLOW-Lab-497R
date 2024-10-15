@@ -5,11 +5,11 @@ using FiniteDiff
 using ForwardDiff
 using Plots
 
-global num_sec = 20
+global num_sec = 16
 global sec_2 = Int(.5*num_sec)
 global scale_factor = 1
 #Creating the optimization problem
-function wing_optimizer(g, x)
+function wing_optimizer(g, theta)
 
     # Define inputs of function
     span = 8.0 #one wing or the whole span       
@@ -20,21 +20,12 @@ function wing_optimizer(g, x)
     # geometry (right half of the wing)
     yle = [i * (span / (num_sec)) for i in 0:(num_sec)]
     zle = zeros(num_sec+1)
-    theta = zeros(num_sec+1)
+    chords = ones(num_sec+1)
+    theta = theta
     phi = zeros(num_sec+1)
-    chords = zeros(num_sec+1)
-
-    for i in 1:num_sec+1
-    chords[i] = x[i]
-    end
-
     fc = zeros(num_sec+1)
     xle = zeros(num_sec+1)
-
-    for i in 1:num_sec
-        xle[i+1] = (chords[1]/4 - chords[i+1]/4)
-    end
-
+    c=zeros(num_sec+1)
 
     # discretization parameters
     ns = num_sec
@@ -44,9 +35,13 @@ function wing_optimizer(g, x)
 
     Sref= 0.0
 
+    for i in 1:num_sec
+        c[i]=chords[i]*cos(thetaopt[i])
+    end
+
     # Reference Area Calculation
     for i in 1:num_sec
-        S = ((chords[i] + chords[i+1]) / 2) * (yle[i+1] - yle[i])
+        S = ((c[i] + c[i+1]) / 2) * (yle[i+1] - yle[i])
         Sref=S+Sref
     end
 
@@ -58,7 +53,7 @@ function wing_optimizer(g, x)
 
 
     # freestream parameters
-    alpha_angle = x[num_sec+2]*pi/180
+    alpha_angle = 5*pi/180
     beta = 0.0
     Omega = [0.0; 0.0; 0.0]
     fs = Freestream(Vinf, alpha_angle, beta, Omega)
@@ -97,47 +92,32 @@ function wing_optimizer(g, x)
     D=.5*rho*Vinf^2*Sref*CD
 
     g[1]=weight-.5*rho*Vinf^2*Sref*CL
-    g[2]=x[1]-x[2]-.02
-
-    # Calculate xle differences
-    for i in 1:num_sec
-        g[i+2] = xle[i] - xle[i+1]
-    end
 
     # Calculate chord differences
     for i in 1:num_sec
-        g[i+num_sec+2] = x[i+1] - x[i]
+        g[i+1] = theta[i] - theta[i+1]#+.25/num_sec
     end
-
-
-    for i in 1:sec_2
-    g[i+2+2*num_sec]=x[i]-x[i+1]-.5
-    end
-
 
     return D
 end
 
 
 # Initialize vectors based on num_sec
-x0 = ones(num_sec+2)  # starting point
+theta0 = fill(5*pi/180, num_sec+1)  # starting point
 
-#=
-if num_sec >= length(chord_opt)
-for i in 1:length(chord_opt)
-c0[i]=chord_opt[i]
+if num_sec >= length(thetaopt)
+for i in 1:length(thetaopt)
+theta0[i]=thetaopt[i]
 end
 else
     for i in 1:num_sec
-    c0[i]=chord_opt[i]
+    theta0[i]=thetaopt[i]
     end
 end
-=#
 
-lx = fill(0.01, num_sec+2)  # lower bounds on x
-ux = fill(5.0, num_sec+2)  # upper bounds on x
-ux[num_sec+2]= 15
-ng = 2 + sec_2 + 2*num_sec  # number of constraints
+ltheta = fill(0.0, num_sec+1)  # lower bounds on x
+utheta = fill(45.0*pi/180, num_sec+1)  # upper bounds on x
+ng = 1 + num_sec  # number of constraints
 lg = -Inf*one(ng)  # lower bounds on g
 ug = zeros(ng)  # upper bounds on g
 g = zeros(ng)
@@ -150,23 +130,15 @@ ip_options = Dict(
 solver = IPOPT(ip_options)
 options = Options(;solver, derivatives=ForwardFD())
 
-xopt, fopt, info = minimize(wing_optimizer, x0, ng, lx, ux, lg, ug, options)
+thetaopt, fopt, info = minimize(wing_optimizer, theta0, ng, ltheta, utheta, lg, ug, options)
 
 span = 8.0 #one wing or the whole span       
 rho = 1.225
 Vinf = 1.0
 
-chord_opt=zeros(num_sec+1)
-
-for i in  1:num_sec
-chord_opt[i]=xopt[i]
-end
+chords = ones(num_sec+1)
 
 xle_opt = zeros(num_sec+1)
-
-for i in 1:num_sec
-    xle_opt[i+1] = (chord_opt[1]/4 - chord_opt[i+1]/4)
-end
 
 # discretization parameters
 ns = num_sec
@@ -177,18 +149,23 @@ symmetric = true
 # geometry (right half of the wing)
 yle = [i * (span / (num_sec)) for i in 0:(num_sec)]
 zle = zeros(num_sec+1)
-theta = zeros(num_sec+1)
+theta = thetaopt
 phi = zeros(num_sec+1)
+c = zeros(num_sec+1)
 
 spacing_s = Uniform()
 spacing_c = Uniform()
 
-Sref= 0.0
+Sref = 0.0
+
+for i in 1:num_sec
+    c[i]=chords[i]*cos(thetaopt[i])
+end
 
 # Reference Area Calculation
 for i in 1:num_sec
     global Sref
-    S = ((chord_opt[i] + chord_opt[i+1]) / 2) * (yle[i+1] - yle[i])
+    S = ((c[i] + c[i+1]) / 2) * (yle[i+1] - yle[i])
     Sref=S+Sref
 end
 
@@ -198,16 +175,14 @@ cref= Sref/span
 rref = [0.50, 0.0, 0.0]
 ref = Reference(Sref, cref, span, rref, Vinf)
 
-alpha_opt=xopt[num_sec+2]
-
 # freestream parameters
-alpha_angle = alpha_opt*pi/180
+alpha_angle = 5*pi/180
 beta = 0.0
 Omega = [0.0; 0.0; 0.0]
 fs = Freestream(Vinf, alpha_angle, beta, Omega)
 
 # reconstruct surface
-grid_opt, surface_opt = wing_to_surface_panels(xle_opt, yle, zle, chord_opt, theta, phi, ns, nc;
+grid_opt, surface_opt = wing_to_surface_panels(xle_opt, yle, zle, chords, thetaopt, phi, ns, nc;
     spacing_s=spacing_s, spacing_c=spacing_c)
 
 # create vector containing all surfaces
@@ -219,9 +194,15 @@ properties_opt = get_surface_properties(system_opt)
 
 write_vtk("optimized-symmetric-planar-wing", surfaces_opt, properties_opt; symmetric=true)
 
-println("Optimized leading edge values: ", xle_opt)
-println("Optimized chord values: ", chord_opt)
-println("Optimized alpha value: ", alpha_opt)
+println("Optimized twist values: ", thetaopt*180/pi)
+
+for i in 1:num_sec
+    chords[i]=chords[i]*cos(thetaopt[i])
+end
+
+for i in 1:num_sec
+    xle_opt[i] = ((1-chords[i])/2)
+end
 
 # Plotting function
 function plot_chords(xle_opt, yle, chords)
@@ -239,4 +220,4 @@ function plot_chords(xle_opt, yle, chords)
 end
 
 # Plot the chords
-plot_chords(xle_opt, yle, chord_opt)
+plot_chords(xle_opt, yle, chords)
