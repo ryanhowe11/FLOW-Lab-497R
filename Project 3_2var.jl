@@ -8,6 +8,8 @@ using Plots
 global num_sec = 20
 global sec_2 = Int(.5*num_sec)
 global scale_factor = 1
+global alpha_max = 15
+
 #Creating the optimization problem
 function wing_optimizer(g, x)
 
@@ -122,7 +124,6 @@ end
 # Initialize vectors based on num_sec
 x0 = ones(num_sec+2)  # starting point
 
-#=
 if num_sec >= length(chord_opt)
 for i in 1:length(chord_opt)
 c0[i]=chord_opt[i]
@@ -132,11 +133,11 @@ else
     c0[i]=chord_opt[i]
     end
 end
-=#
+
 
 lx = fill(0.01, num_sec+2)  # lower bounds on x
 ux = fill(5.0, num_sec+2)  # upper bounds on x
-ux[num_sec+2]= 15
+ux[num_sec+2]= alpha_max
 ng = 2 + sec_2 + 2*num_sec  # number of constraints
 lg = -Inf*one(ng)  # lower bounds on g
 ug = zeros(ng)  # upper bounds on g
