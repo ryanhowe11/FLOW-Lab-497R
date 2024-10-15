@@ -158,7 +158,7 @@ Vinf = 1.0
 
 chord_opt=zeros(num_sec+1)
 
-for i in  1:num_sec
+for i in  1:num_sec+1
 chord_opt[i]=xopt[i]
 end
 
