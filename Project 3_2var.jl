@@ -8,7 +8,7 @@ using Plots
 global num_sec = 20
 global sec_2 = Int(.5*num_sec)
 global scale_factor = 1
-global alpha_max = 15
+global alpha_max = 25
 
 #Creating the optimization problem
 function wing_optimizer(g, x)

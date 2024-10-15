@@ -7,7 +7,9 @@ using Plots
 
 global num_sec = 16
 global sec_2 = Int(.5*num_sec)
-global scale_factor = 1
+global scale_factor = 5
+global Chord_Length = 1
+
 #Creating the optimization problem
 function wing_optimizer(g, theta)
 
@@ -20,7 +22,7 @@ function wing_optimizer(g, theta)
     # geometry (right half of the wing)
     yle = [i * (span / (num_sec)) for i in 0:(num_sec)]
     zle = zeros(num_sec+1)
-    chords = ones(num_sec+1)
+    chords = ones(num_sec+1)*Chord_Length
     theta = theta
     phi = zeros(num_sec+1)
     fc = zeros(num_sec+1)
@@ -136,7 +138,7 @@ span = 8.0 #one wing or the whole span
 rho = 1.225
 Vinf = 1.0
 
-chords = ones(num_sec+1)
+chords = ones(num_sec+1)*Chord_Length
 
 xle_opt = zeros(num_sec+1)
 
@@ -188,36 +190,60 @@ grid_opt, surface_opt = wing_to_surface_panels(xle_opt, yle, zle, chords, thetao
 # create vector containing all surfaces
 surfaces_opt = [surface_opt]
 
-system_opt = steady_analysis(surfaces_opt, ref, fs; symmetric=symmetric)
+system_opt = steady_analysis(surfaces_opt, ref, fs; symmetric=true)
 
 properties_opt = get_surface_properties(system_opt)
+
+grids=[grid_opt]
+
+r, c = lifting_line_geometry(grids, 0.25)
+
+cf, cm = lifting_line_coefficients(system_opt, r, c; frame=Wind())
 
 write_vtk("optimized-symmetric-planar-wing", surfaces_opt, properties_opt; symmetric=true)
 
 println("Optimized twist values: ", thetaopt*180/pi)
 
 for i in 1:num_sec
-    chords[i]=chords[i]*cos(thetaopt[i])
-end
-
-for i in 1:num_sec
     xle_opt[i] = ((1-chords[i])/2)
 end
 
-# Plotting function
-function plot_chords(xle_opt, yle, chords)
-    plot()
-    for i in 1:num_sec
-        x_start = xle_opt[i]
-        y_start = yle[i]
-        x_end = x_start + chords[i]
-        y_end = y_start
-        plot!([x_start, x_end], [y_start, y_end], label="Chord $i", legend=false)
-    end
-    xlabel!("yle")
-    ylabel!("xle_opt / Chord length")
-    title!("Chords at Each Section")
+# Assuming cf is your vector of matrices
+z_direction_coefficients = []
+
+# Loop through each matrix in the cf vector
+for matrix in cf
+    # Extract the third row (z-direction force coefficients)
+    z_coefficients = matrix[3, :]
+    push!(z_direction_coefficients, z_coefficients)
 end
 
-# Plot the chords
-plot_chords(xle_opt, yle, chords)
+y = collect(range(0, stop=span, step=0.1))
+
+# Convert the list of z-direction coefficients to an array if needed
+lifting_coefficients = hcat(z_direction_coefficients...)
+
+Lift_prime = .5*rho*Vinf^2*Chord_Length*lifting_coefficients[:, 1]
+push!(Lift_prime, 0)
+
+yle_2 = [i * (span / (num_sec)) for i in 0:(num_sec)]
+
+area_prime = trapz(yle_2, Lift_prime)
+
+bprime = span
+aprime = 4*area_prime/(bprime*pi)
+
+# Calculate the ideal elliptic lift distribution
+θ = range(0, π/2, length=100)
+x = bprime * cos.(θ)
+y = aprime * sin.(θ)
+#Cl_max = maximum(Lift_prime)
+#elliptical_distribution = Cl_max * sqrt.(1 .- (y ./ span).^2)
+
+# Plot the lift distribution
+plot(yle_2, Lift_prime, label="Optimized Lift Distribution", xlabel="Spanwise Location (y)", ylabel="Lift Coefficient (Cl)")
+#plot!(y, elliptical_distribution, label="Elliptical Lift Distribution", linestyle=:dash)
+
+
+# Save the lift distribution plot as a PDF
+savefig("Lift_Distribution_along_the_Span_Twist_Optimization_increased_lift.pdf")
