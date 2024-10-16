@@ -5,9 +5,9 @@ using FiniteDiff
 using ForwardDiff
 using Plots
 
-global num_sec = 16
+global num_sec = 24
 global sec_2 = Int(.5*num_sec)
-global scale_factor = 5
+global scale_factor = 1
 global Chord_Length = 1
 
 #Creating the optimization problem
@@ -23,7 +23,7 @@ function wing_optimizer(g, theta)
     yle = [i * (span / (num_sec)) for i in 0:(num_sec)]
     zle = zeros(num_sec+1)
     chords = ones(num_sec+1)*Chord_Length
-    theta = theta
+    thetaopt = theta
     phi = zeros(num_sec+1)
     fc = zeros(num_sec+1)
     xle = zeros(num_sec+1)
@@ -95,10 +95,10 @@ function wing_optimizer(g, theta)
 
     g[1]=weight-.5*rho*Vinf^2*Sref*CL
 
-    # Calculate chord differences
-    for i in 1:num_sec
-        g[i+1] = theta[i] - theta[i+1]#+.25/num_sec
-    end
+    # # Calculate chord differences
+    # for i in 1:num_sec
+    #     g[i+1] = theta[i] - theta[i+1]#+.25/num_sec
+    # end
 
     return D
 end
@@ -107,27 +107,27 @@ end
 # Initialize vectors based on num_sec
 theta0 = fill(5*pi/180, num_sec+1)  # starting point
 
-if num_sec >= length(thetaopt)
-for i in 1:length(thetaopt)
-theta0[i]=thetaopt[i]
-end
-else
-    for i in 1:num_sec
-    theta0[i]=thetaopt[i]
-    end
-end
+# if num_sec >= length(thetaopt)
+# for i in 1:length(thetaopt)
+# theta0[i]=thetaopt[i]
+# end
+# else
+#     for i in 1:num_sec
+#     theta0[i]=thetaopt[i]
+#     end
+# end
 
-ltheta = fill(0.0, num_sec+1)  # lower bounds on x
+ltheta = fill(-45.0*pi/180, num_sec+1)  # lower bounds on x
 utheta = fill(45.0*pi/180, num_sec+1)  # upper bounds on x
-ng = 1 + num_sec  # number of constraints
-lg = -Inf*one(ng)  # lower bounds on g
+ng = 1 #+ num_sec  # number of constraints
+lg = -Inf*ones(ng)  # lower bounds on g
 ug = zeros(ng)  # upper bounds on g
 g = zeros(ng)
 
 # ----- set some options ------
 ip_options = Dict(
     "max_iter" => 100,
-    "tol" => 1e-3
+    "tol" => 1e-6
 )
 solver = IPOPT(ip_options)
 options = Options(;solver, derivatives=ForwardFD())
@@ -218,7 +218,7 @@ for matrix in cf
     push!(z_direction_coefficients, z_coefficients)
 end
 
-y = collect(range(0, stop=span, step=0.1))
+y2 = collect(range(0, stop=span, step=0.1))
 
 # Convert the list of z-direction coefficients to an array if needed
 lifting_coefficients = hcat(z_direction_coefficients...)
@@ -237,12 +237,12 @@ aprime = 4*area_prime/(bprime*pi)
 θ = range(0, π/2, length=100)
 x = bprime * cos.(θ)
 y = aprime * sin.(θ)
-#Cl_max = maximum(Lift_prime)
-#elliptical_distribution = Cl_max * sqrt.(1 .- (y ./ span).^2)
+Cl_max = maximum(Lift_prime)
+elliptical_distribution = Cl_max * sqrt.(1 .- (y2 ./ span).^2)
 
 # Plot the lift distribution
 plot(yle_2, Lift_prime, label="Optimized Lift Distribution", xlabel="Spanwise Location (y)", ylabel="Lift Coefficient (Cl)")
-#plot!(y, elliptical_distribution, label="Elliptical Lift Distribution", linestyle=:dash)
+plot!(y2, elliptical_distribution, label="Elliptical Lift Distribution", linestyle=:dash)
 
 
 # Save the lift distribution plot as a PDF
