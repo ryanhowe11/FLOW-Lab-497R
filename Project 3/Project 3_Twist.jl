@@ -246,4 +246,4 @@ plot!(y2, elliptical_distribution, label="Elliptical Lift Distribution", linesty
 
 
 # Save the lift distribution plot as a PDF
-savefig("Lift_Distribution_along_the_Span_Twist_Optimization_increased_lift.pdf")
+savefig("Lift_Distribution_along_the_Span_Twist_Optimization.pdf")
