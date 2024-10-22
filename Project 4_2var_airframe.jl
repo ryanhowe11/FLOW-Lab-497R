@@ -4,6 +4,7 @@ using Ipopt
 using FiniteDiff
 using ForwardDiff
 using Plots
+using LinearAlgebra
 
 global num_sec = 12
 global sec_2 = Int(.5*num_sec)
@@ -19,6 +20,37 @@ function wing_optimizer(g, x)
     weight = 1.7*scale_factor
     Vinf = 1.0
 
+    dh = 4
+    dv = 4
+    
+    # horizontal stabilizer
+    xle_h = [0.0, 0.14]
+    yle_h = [0.0, 1.25]
+    zle_h = [0.0, 0.0]
+    chord_h = [0.7, 0.42]
+    theta_h = [0.0, 0.0]
+    phi_h = [0.0, 0.0]
+    fc_h = fill((xc) -> 0, 2) # camberline function for each section
+    ns_h = num_sec
+    nc_h = 1
+    spacing_s_h = Uniform()
+    spacing_c_h = Uniform()
+    mirror_h = false
+    
+    # vertical stabilizer
+    xle_v = [0.0, 0.14]
+    yle_v = [0.0, 0.0]
+    zle_v = [0.0, 1.0]
+    chord_v = [0.7, 0.42]
+    theta_v = [0.0, 0.0]
+    phi_v = [0.0, 0.0]
+    fc_v = fill((xc) -> 0, 2) # camberline function for each section
+    ns_v = num_sec
+    nc_v = 1
+    spacing_s_v = Uniform()
+    spacing_c_v = Uniform()
+    mirror_v = false
+
     # geometry (right half of the wing)
     yle = [i * (span / (num_sec)) for i in 0:(num_sec)]
     zle = zeros(num_sec+1)
@@ -27,11 +59,7 @@ function wing_optimizer(g, x)
     chords = zeros(num_sec+1)
 
     for i in 1:num_sec+1
-        chords[i] = x[i]
-    end
-
-    for i in num_sec+2:2*num_sec+2
-        theta[i-(num_sec+1)] = x[i]
+    chords[i] = x[i]
     end
 
     fc = zeros(num_sec+1)
@@ -64,23 +92,45 @@ function wing_optimizer(g, x)
 
 
     # freestream parameters
-    alpha_angle = 5*pi/180
+    alpha_angle = x[num_sec+2]*pi/180
     beta = 0.0
     Omega = [0.0; 0.0; 0.0]
     fs = Freestream(Vinf, alpha_angle, beta, Omega)
 
     # construct surface
-    grid, surface = wing_to_surface_panels(xle, yle, zle, chords, theta, phi, ns, nc;
+    wgrid, wing = wing_to_surface_panels(xle, yle, zle, chords, theta, phi, ns, nc;
         spacing_s=spacing_s, spacing_c=spacing_c)
 
+# generate surface panels for horizontal tail
+hgrid, htail = wing_to_surface_panels(xle_h, yle_h, zle_h, chord_h, theta_h, phi_h, ns_h, nc_h;
+    mirror=mirror_h, fc=fc_h, spacing_s=spacing_s_h, spacing_c=spacing_c_h)
+VortexLattice.translate!(hgrid, [dh, 0.0, 0.0])
+VortexLattice.translate!(htail, [dh, 0.0, 0.0])
+
+# generate surface panels for vertical tail
+vgrid, vtail = wing_to_surface_panels(xle_v, yle_v, zle_v, chord_v, theta_v, phi_v, ns_v, nc_v;
+    mirror=mirror_v, fc=fc_v, spacing_s=spacing_s_v, spacing_c=spacing_c_v)
+VortexLattice.translate!(vgrid, [dv, 0.0, 0.0])
+VortexLattice.translate!(vtail, [dv, 0.0, 0.0])
+
+# now set normal vectors manually
+ncp = avl_normal_vector([xle[2]-xle[1], yle[2]-yle[1], zle[2]-zle[1]], 2.0*pi/180)
+
+# overwrite normal vector for each wing panel
+for i = 1:length(wing)
+    wing[i] = set_normal(wing[i], ncp)
+end
+
     # create vector containing all surfaces
-    surfaces = [surface]
+    grids = [wgrid, hgrid, vgrid]
+    surfaces = [wing, htail, vtail]
+    surface_id = [1, 2, 3]
 
     # we can use symmetry since the geometry and flow conditions are symmetric about the X-Z axis
     symmetric = true
 
     # perform steady state analysis
-    system = steady_analysis(surfaces, ref, fs; symmetric=symmetric)
+    system = steady_analysis(surfaces, ref, fs; symmetric=symmetric, surface_id=surface_id)
 
     # retrieve near-field forces
     CF, CM = body_forces(system; frame=Wind())
@@ -103,7 +153,7 @@ function wing_optimizer(g, x)
     D=.5*rho*Vinf^2*Sref*CD
 
     g[1]=weight-.5*rho*Vinf^2*Sref*CL
-    g[2]=-1
+    g[2]=x[1]-x[2]-.02
 
     # Calculate xle differences
     for i in 1:num_sec
@@ -115,67 +165,94 @@ function wing_optimizer(g, x)
         g[i+num_sec+2] = x[i+1] - x[i]
     end
 
-    for i in 1:num_sec
-        if x[num_sec+2] <= 0
-        g[i+2*num_sec+2]=180*x[num_sec+2+i]/pi-180*x[num_sec+1+i]/pi
-        else
-        g[i+2*num_sec+2]=180*x[num_sec+1+i]/pi-180*x[num_sec+1+i+1]/pi
-        end
+
+    for i in 1:sec_2
+    g[i+2+2*num_sec]=x[i]-x[i+1]-.5
     end
+
 
     return D
 end
 
-# Initialize vectors based on num_sec
-x0 = zeros(2*num_sec+2)  # starting point
+# function to construct a normal vector the way AVL does
+#  - `ds` is a line representing the leading edge
+#  - `theta` is the incidence angle, taken as a rotation (+ by RH rule) about
+#        the surface's spanwise axis projected onto the Y-Z plane.
+function avl_normal_vector(ds, theta)
 
-# Initialize vectors based on num_sec
-for i in 1:num_sec+1
-x0[i] = 1  # starting point
+    st, ct = sincos(theta)
+
+    # bound vortex vector
+    bhat = ds/norm(ds)
+
+    # chordwise strip normal vector
+    shat = [0, -ds[3], ds[2]]/sqrt(ds[2]^2+ds[3]^2)
+
+    # camberline vector
+    chat = [ct, -st*shat[2], -st*shat[3]]
+
+    # normal vector perpindicular to camberline and bound vortex for entire chordwise strip
+    ncp = cross(chat, ds)
+    return ncp / norm(ncp) # normal vector used by AVL
 end
 
-# if num_sec >= length(chord_opt)
-# for i in 1:length(chord_opt)
-# x0[i]=xopt[i]
-# end
-# else
-#     for i in 1:num_sec+1
-#     x0[i]=xopt[i]
-#     end
-# end
+dh = 4
+dv = 4
 
-# if num_sec >= length(chord_opt)
-#     for i in length(chord_opt)+1:2*length(chord_opt)+1
-#     x0[i]=xopt[i]
-#     end
-#     else
-#         for i in num_sec+2:2*num_sec+2
-#         x0[i]=xopt[i]
-#     end
-# end
+# horizontal stabilizer
+xle_h = [0.0, 0.14]
+yle_h = [0.0, 1.25]
+zle_h = [0.0, 0.0]
+chord_h = [0.7, 0.42]
+theta_h = [0.0, 0.0]
+phi_h = [0.0, 0.0]
+fc_h = fill((xc) -> 0, 2) # camberline function for each section
+ns_h = num_sec
+nc_h = 1
+spacing_s_h = Uniform()
+spacing_c_h = Uniform()
+mirror_h = false
 
-lx = fill(-45.0*pi/180, 2*num_sec+2)  # lower bounds on x
-ux = fill(45.0*pi/180, 2*num_sec+2)  # upper bounds on x
+# vertical stabilizer
+xle_v = [0.0, 0.14]
+yle_v = [0.0, 0.0]
+zle_v = [0.0, 1.0]
+chord_v = [0.7, 0.42]
+theta_v = [0.0, 0.0]
+phi_v = [0.0, 0.0]
+fc_v = fill((xc) -> 0, 2) # camberline function for each section
+ns_v = num_sec
+nc_v = 1
+spacing_s_v = Uniform()
+spacing_c_v = Uniform()
+mirror_v = false
 
 # Initialize vectors based on num_sec
-for i in 1:num_sec+1
-    lx[i] = 0.01  # starting point
+x0 = ones(num_sec+2)  # starting point
+
+if num_sec >= length(chord_opt)
+for i in 1:length(chord_opt)
+c0[i]=chord_opt[i]
+end
+else
+    for i in 1:num_sec
+    c0[i]=chord_opt[i]
+    end
 end
 
-# Initialize vectors based on num_sec
-for i in 1:num_sec+1
-    ux[i] = 5.0  # starting point
-end
 
-ng = 2 + 3*num_sec  # number of constraints
+lx = fill(0.01, num_sec+2)  # lower bounds on x
+ux = fill(5.0, num_sec+2)  # upper bounds on x
+ux[num_sec+2]= alpha_max
+ng = 2 + sec_2 + 2*num_sec  # number of constraints
 lg = -Inf*one(ng)  # lower bounds on g
 ug = zeros(ng)  # upper bounds on g
 g = zeros(ng)
 
 # ----- set some options ------
 ip_options = Dict(
-    "max_iter" => 150,
-    "tol" => 1e-2
+    "max_iter" => 100,
+    "tol" => 1e-3
 )
 solver = IPOPT(ip_options)
 options = Options(;solver, derivatives=ForwardFD())
@@ -186,7 +263,6 @@ span = 8.0 #one wing or the whole span
 rho = 1.225
 Vinf = 1.0
 
-theta=zeros(num_sec+1)
 chord_opt=zeros(num_sec+1)
 
 for i in  1:num_sec+1
@@ -199,19 +275,16 @@ for i in 1:num_sec
     xle_opt[i+1] = (chord_opt[1]/4 - chord_opt[i+1]/4)
 end
 
-for i in num_sec+2:2*num_sec+2
-    theta[i-(num_sec+1)] = xopt[i]
-end
-
 # discretization parameters
 ns = num_sec
-nc = num_sec
+nc = 1
 
-symmetric = true
+symmetric = [true, true, false]
 
 # geometry (right half of the wing)
 yle = [i * (span / (num_sec)) for i in 0:(num_sec)]
 zle = zeros(num_sec+1)
+theta = zeros(num_sec+1)
 phi = zeros(num_sec+1)
 
 spacing_s = Uniform()
@@ -232,7 +305,7 @@ cref= Sref/span
 rref = [0.50, 0.0, 0.0]
 ref = Reference(Sref, cref, span, rref, Vinf)
 
-alpha_opt=5
+alpha_opt=xopt[num_sec+2]
 
 # freestream parameters
 alpha_angle = alpha_opt*pi/180
@@ -241,28 +314,49 @@ Omega = [0.0; 0.0; 0.0]
 fs = Freestream(Vinf, alpha_angle, beta, Omega)
 
 # reconstruct surface
-grid_opt, surface_opt = wing_to_surface_panels(xle_opt, yle, zle, chord_opt, theta, phi, ns, nc;
+wgrid_opt, wing_opt = wing_to_surface_panels(xle_opt, yle, zle, chord_opt, theta, phi, ns, nc;
     spacing_s=spacing_s, spacing_c=spacing_c)
 
-# create vector containing all surfaces
-surfaces_opt = [surface_opt]
+# generate surface panels for horizontal tail
+hgrid_opt, htail_opt = wing_to_surface_panels(xle_h, yle_h, zle_h, chord_h, theta_h, phi_h, ns_h, nc_h;
+    mirror=mirror_h, fc=fc_h, spacing_s=spacing_s_h, spacing_c=spacing_c_h)
+VortexLattice.translate!(hgrid_opt, [dh, 0.0, 0.0])
+VortexLattice.translate!(htail_opt, [dh, 0.0, 0.0])
 
-system_opt = steady_analysis(surfaces_opt, ref, fs; symmetric=symmetric)
+# generate surface panels for vertical tail
+vgrid_opt, vtail_opt = wing_to_surface_panels(xle_v, yle_v, zle_v, chord_v, theta_v, phi_v, ns_v, nc_v;
+    mirror=mirror_v, fc=fc_v, spacing_s=spacing_s_v, spacing_c=spacing_c_v)
+VortexLattice.translate!(vgrid_opt, [dv, 0.0, 0.0])
+VortexLattice.translate!(vtail_opt, [dv, 0.0, 0.0])
+
+# now set normal vectors manually
+ncp = avl_normal_vector([xle[2]-xle[1], yle[2]-yle[1], zle[2]-zle[1]], 2.0*pi/180)
+
+# overwrite normal vector for each wing panel
+for i = 1:length(wing_opt)
+    wing_opt[i] = set_normal(wing_opt[i], ncp)
+end
+
+grids = [wgrid_opt, hgrid_opt, vgrid_opt]
+# create vector containing all surfaces
+surfaces_opt = [wing_opt, htail_opt, vtail_opt]
+surface_idopt = [1, 2, 3]
+
+system_opt = steady_analysis(surfaces_opt, ref, fs; symmetric=symmetric, surface_id=surface_idopt)
 
 properties_opt = get_surface_properties(system_opt)
-
-grids=[grid_opt]
 
 r, c = lifting_line_geometry(grids, 0.25)
 
 cf, cm = lifting_line_coefficients(system_opt, r, c; frame=Wind())
 
-write_vtk("optimized-symmetric-planar-wing", surfaces_opt, properties_opt; symmetric=true)
+symmetric = [true, true, false]
+
+write_vtk("optimized-symmetric-planar-wing", surfaces_opt, properties_opt; symmetric=symmetric)
 
 println("Optimized leading edge values: ", xle_opt)
 println("Optimized chord values: ", chord_opt)
-# println("Optimized alpha value: ", alpha_opt)
-println("Optimized twist values: ", theta*180/pi)
+println("Optimized alpha value: ", alpha_opt)
 
 # Plotting function
 function plot_chords(xle_opt, yle, chords)
@@ -281,8 +375,12 @@ end
 
 # Plot the chords
 plot_chords(xle_opt, yle, chord_opt)
+savefig("Chords_plot_airframe.pdf")
 
-savefig("Chord Plot.pdf")
+CF, CM = body_forces(system_opt; frame=Stability())
+CDiff = far_field_drag(system_opt)
+CD, CY, CL = CF
+Cl, Cm, Cn = CM
 
 # Assuming cf is your vector of matrices
 z_direction_coefficients = []
@@ -320,6 +418,5 @@ elliptical_distribution = Cl_max * sqrt.(1 .- (y2 ./ span).^2)
 plot(yle_2, Lift_prime, label="Optimized Lift Distribution", xlabel="Spanwise Location (y)", ylabel="Lift Coefficient (Cl)")
 plot!(y2, elliptical_distribution, label="Elliptical Lift Distribution", linestyle=:dash)
 
-
 # Save the lift distribution plot as a PDF
-savefig("Lift_Distribution_along_the_Span_Twist_Optimization.pdf")
+savefig("Lift_Distribution_along_the_Span_Twist_Optimization_With_Tail.pdf")
