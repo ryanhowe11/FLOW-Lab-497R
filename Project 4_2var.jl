@@ -104,7 +104,20 @@ function wing_optimizer(g, x)
 
     g[1]=weight-.5*rho*Vinf^2*Sref*CL
     g[2]=x[1]-x[2]-.02
-+i]-x[num_sec+1+i]
+
+    # Calculate xle differences
+    for i in 1:num_sec
+        g[i+2] = xle[i] - xle[i+1]
+    end
+
+    # Calculate chord differences
+    for i in 1:num_sec
+        g[i+num_sec+2] = x[i+1] - x[i]
+    end
+
+    for i in 1:num_sec
+        if x[num_sec+2] <= 0
+        g[i+2*num_sec+2]=x[num_sec+2+i]-x[num_sec+1+i]
         println("Negative")
         else
         g[i+2*num_sec+2]=x[num_sec+1+i]-x[num_sec+1+i+1]
