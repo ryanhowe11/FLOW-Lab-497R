@@ -176,7 +176,7 @@ g = zeros(ng)
 # ----- set some options ------
 ip_options = Dict(
     "max_iter" => 150,
-    "tol" => .9
+    "tol" => 1e-1
 )
 solver = IPOPT(ip_options)
 options = Options(;solver, derivatives=ForwardFD())
