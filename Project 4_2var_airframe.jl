@@ -151,9 +151,12 @@ end
 
 
     D=.5*rho*Vinf^2*Sref*CD
+    L=.5*rho*Vinf^2*Sref*CL
 
-    g[1]=weight-.5*rho*Vinf^2*Sref*CL
-    g[2]=x[1]-x[2]-.02
+    Einv=(D/L)
+
+    g[1]=weight-L
+    g[2]=-1
 
     # Calculate xle differences
     for i in 1:num_sec
@@ -171,7 +174,7 @@ end
     end
 
 
-    return D
+    return Einv
 end
 
 # function to construct a normal vector the way AVL does
