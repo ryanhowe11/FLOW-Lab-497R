@@ -7,9 +7,10 @@ using Plots
 using LinearAlgebra
 using Trapz
 
-global num_sec = 20
-global sec_2 = Int(.5*num_sec)
-global scale_factor = 5
+function run()
+num_sec = 20
+sec_2 = Int(.5*num_sec)
+scale_factor = 5
 #Creating the optimization problem
 function wing_optimizer(g, c)
 
@@ -180,7 +181,7 @@ Sref= 0.0
 
 # Reference Area Calculation
 for i in 1:num_sec
-    global Sref
+    Sref
     S = ((chord_opt[i] + chord_opt[i+1]) / 2) * (yle[i+1] - yle[i])
     Sref=S+Sref
 end
@@ -277,3 +278,4 @@ plot!(y2, elliptical_distribution, label="Elliptical Lift Distribution", linesty
 
 # Save the lift distribution plot as a PDF
 savefig("Lift_Distribution_along_the_Span_Twist_Optimization.pdf")
+end
