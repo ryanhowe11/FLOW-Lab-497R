@@ -4,6 +4,8 @@ using Ipopt
 using FiniteDiff
 using ForwardDiff
 using Plots
+using LinearAlgebra
+using Trapz
 
 global num_sec = 20
 global sec_2 = Int(.5*num_sec)
@@ -32,7 +34,7 @@ end
 
 
 # discretization parameters
-ns = num_sec
+ns = num_sec+1
 nc = num_sec
 spacing_s = Uniform()
 spacing_c = Uniform()
@@ -92,6 +94,7 @@ properties = get_surface_properties(system)
 D=.5*rho*Vinf^2*Sref*CD
 L = .5*rho*Vinf^2*Sref*CL
 
+O = D/L
 
 g[1]=weight-L
 g[2]=c[1]-c[2]-.02
@@ -112,7 +115,7 @@ g[i+2+2*num_sec]=c[i]-c[i+1]-.5
 end
 
 
-return D
+return O
 end
 
 
@@ -159,7 +162,7 @@ for i in 1:num_sec
 end
 
 # discretization parameters
-ns = num_sec
+ns = num_sec+1
 nc = num_sec
 
 symmetric = true
@@ -205,6 +208,12 @@ system_opt = steady_analysis(surfaces_opt, ref, fs; symmetric=symmetric)
 
 properties_opt = get_surface_properties(system_opt)
 
+grids=[grid_opt]
+
+r, c = lifting_line_geometry(grids, 0.25)
+
+cf, cm = lifting_line_coefficients(system_opt, r, c; frame=Wind())
+
 write_vtk("optimized-symmetric-planar-wing", surfaces_opt, properties_opt; symmetric=true)
 
 println("Optimized leading edge values: ", xle_opt)
@@ -218,7 +227,7 @@ function plot_chords(xle_opt, yle, chords)
         y_start = yle[i]
         x_end = x_start + chords[i]
         y_end = y_start
-        plot!([x_start, x_end], [y_start, y_end], label="Chord $i", legend=false)
+        plot!([x_start, x_end], [y_start, y_end], label="Chord $i", legend=false, aspect_ratio=:equal)
     end
     xlabel!("yle")
     ylabel!("xle_opt / Chord length")
@@ -227,3 +236,44 @@ end
 
 # Plot the chords
 plot_chords(xle_opt, yle, chord_opt)
+savefig("Chord_Plot_4.pdf")
+
+
+# Assuming cf is your vector of matrices
+z_direction_coefficients = []
+
+# Loop through each matrix in the cf vector
+for matrix in cf
+    # Extract the third row (z-direction force coefficients)
+    z_coefficients = matrix[3, :]
+    push!(z_direction_coefficients, z_coefficients)
+end
+
+y2 = collect(range(0, stop=span, step=0.1))
+
+# Convert the list of z-direction coefficients to an array if needed
+lifting_coefficients = hcat(z_direction_coefficients...)
+
+Lift_prime = .5*rho*Vinf^2*chord_opt.*lifting_coefficients[:, 1]
+
+yle_2 = [i * (span / (num_sec)) for i in 0:(num_sec)]
+
+area_prime = trapz(yle_2, Lift_prime)
+
+bprime = span
+aprime = 4*area_prime/(bprime*pi)
+
+# Calculate the ideal elliptic lift distribution
+θ = range(0, π/2, length=100)
+x = bprime * cos.(θ)
+y = aprime * sin.(θ)
+Cl_max = maximum(Lift_prime)
+elliptical_distribution = Cl_max * sqrt.(1 .- (y2 ./ span).^2)
+
+# Plot the lift distribution
+plot(yle_2, Lift_prime, label="Optimized Lift Distribution", xlabel="Spanwise Location (y)", ylabel="Lift Coefficient (Cl)")
+plot!(y2, elliptical_distribution, label="Elliptical Lift Distribution", linestyle=:dash)
+
+
+# Save the lift distribution plot as a PDF
+savefig("Lift_Distribution_along_the_Span_Twist_Optimization.pdf")
