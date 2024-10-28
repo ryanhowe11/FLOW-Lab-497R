@@ -33,6 +33,72 @@ function Variables(scale_factor)
 return span, rho, weight, Vinf, yle, zle, chords, theta, phi, fc, xle, c, ns, nc, spacing_s, spacing_c, alpha_angle, beta, Omega, symmetric
 end
 
+function AirFrameVariables(scale_factor)
+
+    # Define inputs of function
+    span = 8.0 #one wing or the whole span       
+    rho = 1.225
+    weight = 1.7*scale_factor
+    Vinf = 1.0
+
+    dh = 4
+    dv = 4
+    
+    # horizontal stabilizer
+    xle_h = [0.0, 0.14]
+    yle_h = [0.0, 1.25]
+    zle_h = [0.0, 0.0]
+    chord_h = [0.7, 0.42]
+    theta_h = [0.0, 0.0]
+    phi_h = [0.0, 0.0]
+    fc_h = fill((xc) -> 0, 2) # camberline function for each section
+    ns_h = num_sec
+    nc_h = 1
+    spacing_s_h = Uniform()
+    spacing_c_h = Uniform()
+    mirror_h = false
+    
+    # vertical stabilizer
+    xle_v = [0.0, 0.14]
+    yle_v = [0.0, 0.0]
+    zle_v = [0.0, 1.0]
+    chord_v = [0.7, 0.42]
+    theta_v = [0.0, 0.0]
+    phi_v = [0.0, 0.0]
+    fc_v = fill((xc) -> 0, 2) # camberline function for each section
+    ns_v = num_sec
+    nc_v = 1
+    spacing_s_v = Uniform()
+    spacing_c_v = Uniform()
+    mirror_v = false
+
+    # geometry (right half of the wing)
+    yle = [i * (span / (num_sec)) for i in 0:(num_sec)]
+    zle = zeros(num_sec+1)
+    chords = ones(num_sec+1)*Chord_Length
+    theta = zeros(num_sec+1)
+    phi = zeros(num_sec+1)
+    fc = zeros(num_sec+1)
+    xle = zeros(num_sec+1)
+    c=zeros(num_sec+1)
+
+    # discretization parameters
+    ns = num_sec+1
+    nc = num_sec
+    spacing_s = Uniform()
+    spacing_c = Uniform()
+
+    # freestream parameters
+    alpha_angle = 5*pi/180
+    beta = 0.0
+    Omega = [0.0; 0.0; 0.0]
+
+    # we can use symmetry since the geometry and flow conditions are symmetric about the X-Z axis
+    symmetric = true
+
+return span, rho, weight, Vinf, yle, zle, chords, theta, phi, fc, xle, c, ns, nc, spacing_s, spacing_c, alpha_angle, beta, Omega, symmetric, xle_h, yle_h, zle_h, chord_h, theta_h, phi_h, fc_h, ns_h, nc_h, spacing_s_h, spacing_c_h, mirror_h, xle_v, yle_v, zle_v, chord_v, theta_v, phi_v, fc_v, ns_v, nc_v, spacing_s_v, spacing_c_v, mirror_v, dh, dv
+end
+
 function ReferenceAreaTheta(c, chords, theta)
 
     Sref= 0.0
@@ -60,6 +126,67 @@ function GetRef(c, chords, theta, span)
     rref = [0.50, 0.0, 0.0]
 
     return Sref, cref, rref
+end
+
+function Airframe_Drag_Calculation_Theta(thetaopt)
+
+    span, rho, weight, Vinf, yle, zle, chords, theta, phi, fc, xle, c, ns, nc, spacing_s, spacing_c, alpha_angle, beta, Omega, symmetric, xle_h, yle_h, zle_h, chord_h, theta_h, phi_h, fc_h, ns_h, nc_h, spacing_s_h, spacing_c_h, mirror_h, xle_v, yle_v, zle_v, chord_v, theta_v, phi_v, fc_v, ns_v, nc_v, spacing_s_v, spacing_c_v, mirror_v, dh, dv = AirFrameVariables()
+
+    theta=thetaopt
+
+    Sref, cref, rref = GetRef(c, chords, theta, span)
+    
+    ref = Reference(Sref, cref, span, rref, Vinf)
+
+    fs = Freestream(Vinf, alpha_angle, beta, Omega)
+
+    # construct surface
+    wgrid, wing = wing_to_surface_panels(xle, yle, zle, chords, theta, phi, ns, nc;
+            spacing_s=spacing_s, spacing_c=spacing_c)
+
+    # generate surface panels for horizontal tail
+    hgrid, htail = wing_to_surface_panels(xle_h, yle_h, zle_h, chord_h, theta_h, phi_h, ns_h, nc_h;
+        mirror=mirror_h, fc=fc_h, spacing_s=spacing_s_h, spacing_c=spacing_c_h)
+    VortexLattice.translate!(hgrid, [dh, 0.0, 0.0])
+    VortexLattice.translate!(htail, [dh, 0.0, 0.0])
+
+    # generate surface panels for vertical tail
+    vgrid, vtail = wing_to_surface_panels(xle_v, yle_v, zle_v, chord_v, theta_v, phi_v, ns_v, nc_v;
+        mirror=mirror_v, fc=fc_v, spacing_s=spacing_s_v, spacing_c=spacing_c_v)
+    VortexLattice.translate!(vgrid, [dv, 0.0, 0.0])
+    VortexLattice.translate!(vtail, [dv, 0.0, 0.0])
+
+    # create vector containing all surfaces
+    grids = [wgrid, hgrid, vgrid]
+    surfaces = [wing, htail, vtail]
+    surface_id = [1, 2, 3]
+
+    # we can use symmetry since the geometry and flow conditions are symmetric about the X-Z axis
+    symmetric = true
+
+    # perform steady state analysis
+    system = steady_analysis(surfaces, ref, fs; symmetric=symmetric, surface_id=surface_id)
+
+    # retrieve near-field forces
+    CF, CM = body_forces(system; frame=Wind())
+
+    println(CF)
+
+    # perform far-field analysis
+    CDiff = far_field_drag(system)
+
+    dCF, dCM = stability_derivatives(system)
+
+    CD, CY, CL = CF
+    Cl, Cm, Cn = CM
+
+    properties = get_surface_properties(system)
+
+    #write_vtk("intermediate-symmetric-planar-wing", surfaces, properties; symmetric)
+
+    D=.5*rho*Vinf^2*Sref*CD
+
+return D, weight, rho, Vinf, Sref, CL, chords
 end
 
 function Drag_Calculation_Theta(thetaopt)
@@ -154,6 +281,8 @@ end
 
 function XLE_calc(chords, num_sec)
 
+    xle_opt = zeros(num_sec+1)
+
     for i in 1:num_sec
         xle_opt[i] = ((1-chords[i])/2)
     end
@@ -222,4 +351,10 @@ function VTK_setup(surface_opt, Vinf, alpha_angle, beta, Omega, ref, symmetric)
     properties_opt = get_surface_properties(system_opt)
 
 return surfaces_opt, system_opt, properties_opt
+end
+
+# Define the avl_normal_vector function
+function avl_normal_vector(vector, angle)
+    # Example calculation
+    return normalize(vector) * cos(angle)
 end

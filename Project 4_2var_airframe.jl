@@ -233,15 +233,15 @@ mirror_v = false
 # Initialize vectors based on num_sec
 x0 = ones(num_sec+2)  # starting point
 
-if num_sec >= length(chord_opt)
-for i in 1:length(chord_opt)
-c0[i]=chord_opt[i]
-end
-else
-    for i in 1:num_sec
-    c0[i]=chord_opt[i]
-    end
-end
+# if num_sec >= length(chord_opt)
+# for i in 1:length(chord_opt)
+# c0[i]=chord_opt[i]
+# end
+# else
+#     for i in 1:num_sec
+#     c0[i]=chord_opt[i]
+#     end
+# end
 
 
 lx = fill(0.01, num_sec+2)  # lower bounds on x
