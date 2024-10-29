@@ -9,12 +9,18 @@ using Trapz
 using LinearAlgebra
 include("Project4_functions.jl")
 
-function run()
+function run(;thetaopt)
     num_sec = 12
     sec_2 = Int(.5*num_sec)
     Chord_Length = 1
     scale_factor = 1
+
+    if thetaopt != 0
+    Prev_Run = 1
+    else
     Prev_Run = 0
+    end
+    
     Include_Airframe = 1
     ng = 13
 
@@ -88,18 +94,12 @@ function run()
         VortexLattice.translate!(vgrid_opt, [dv, 0.0, 0.0])
         VortexLattice.translate!(vtail_opt, [dv, 0.0, 0.0])
 
-        # now set normal vectors manually
-        ncp = avl_normal_vector([xle[2]-xle[1], yle[2]-yle[1], zle[2]-zle[1]], 2.0*pi/180)
-
-        # overwrite normal vector for each wing panel
-        for i = 1:length(wing_opt)
-        wing_opt[i] = set_normal(wing_opt[i], ncp)
-        end
-
         grids = [wgrid_opt, hgrid_opt, vgrid_opt]
         # create vector containing all surfaces
         surfaces_opt = [wing_opt, htail_opt, vtail_opt]
         surface_idopt = [1, 2, 3]
+
+        symmetric = [true, true, false]
         
         system_opt = steady_analysis(surfaces_opt, ref, fs; symmetric=symmetric, surface_id=surface_idopt)
         
@@ -108,8 +108,6 @@ function run()
         r, c = lifting_line_geometry(grids, 0.25)
         
         cf, cm = lifting_line_coefficients(system_opt, r, c; frame=Wind())
-        
-        symmetric = [true, true, false]
         
         write_vtk("optimized-symmetric-planar-wing", surfaces_opt, properties_opt; symmetric=symmetric)
 
@@ -128,12 +126,14 @@ function run()
         push!(z_direction_coefficients, z_coefficients)
     end
 
+        z_direction_coefficients_wing = z_direction_coefficients[1]
+
     y2 = collect(range(0, stop=span, step=0.1))
     # Convert the list of z-direction coefficients to an array if needed
-    lifting_coefficients = hcat(z_direction_coefficients...)
+    lifting_coefficients = hcat(z_direction_coefficients_wing...)
+    lifting_coefficients = vec(transpose(lifting_coefficients))
 
-    Lift_prime = .5*rho*Vinf^2*Chord_Length*lifting_coefficients[:, 1]
-    push!(Lift_prime, 0)
+    Lift_prime = .5*rho*Vinf^2 .*chords.*lifting_coefficients
 
         yle_2 = [i * (span / (num_sec)) for i in 0:(num_sec)]
 
@@ -178,4 +178,12 @@ function run()
     return thetaopt
 end
 
-thetaopt=run()
+if thetaopt !=0
+
+thetaopt=run(;thetaopt=thetaopt)
+
+else
+
+    thetaopt=run()
+
+end

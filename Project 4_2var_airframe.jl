@@ -353,6 +353,8 @@ r, c = lifting_line_geometry(grids, 0.25)
 
 cf, cm = lifting_line_coefficients(system_opt, r, c; frame=Wind())
 
+println("cf= ", cf)
+
 symmetric = [true, true, false]
 
 write_vtk("optimized-symmetric-planar-wing", surfaces_opt, properties_opt; symmetric=symmetric)
