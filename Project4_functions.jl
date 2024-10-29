@@ -240,7 +240,7 @@ function setup(Prev_Run, num_sec, ng)
 
     if Prev_Run == 1
         if num_sec >= length(thetaopt)
-        for i in 1:length(thetaopt)
+        for i = 1:length(thetaopt)
         theta0[i]=thetaopt[i]
         end
         else
@@ -356,4 +356,74 @@ end
 function avl_normal_vector(vector, angle)
     # Example calculation
     return normalize(vector) * cos(angle)
+end
+
+function AircraftPaneling(xle_opt, yle, zle, chords, theta, phi, ns, nc,
+    spacing_s, spacing_c, xle_h, yle_h, zle_h, chord_h, theta_h, phi_h, ns_h, nc_h, mirror_h, fc_h, spacing_s_h, spacing_c_h, xle_v, 
+    yle_v, zle_v, chord_v, theta_v, phi_v, ns_v, nc_v, mirror_v, fc_v, spacing_s_v, spacing_c_v, dh, dv)
+
+        # reconstruct surface
+        wgrid_opt, wing_opt = wing_to_surface_panels(xle_opt, yle, zle, chords, theta, phi, ns, nc;
+        spacing_s=spacing_s, spacing_c=spacing_c)
+
+        # generate surface panels for horizontal tail
+        hgrid_opt, htail_opt = wing_to_surface_panels(xle_h, yle_h, zle_h, chord_h, theta_h, phi_h, ns_h, nc_h;
+        mirror=mirror_h, fc=fc_h, spacing_s=spacing_s_h, spacing_c=spacing_c_h)
+        VortexLattice.translate!(hgrid_opt, [dh, 0.0, 0.0])
+        VortexLattice.translate!(htail_opt, [dh, 0.0, 0.0])
+
+        # generate surface panels for vertical tail
+        vgrid_opt, vtail_opt = wing_to_surface_panels(xle_v, yle_v, zle_v, chord_v, theta_v, phi_v, ns_v, nc_v;
+        mirror=mirror_v, fc=fc_v, spacing_s=spacing_s_v, spacing_c=spacing_c_v)
+        VortexLattice.translate!(vgrid_opt, [dv, 0.0, 0.0])
+        VortexLattice.translate!(vtail_opt, [dv, 0.0, 0.0])
+
+        grids = [wgrid_opt, hgrid_opt, vgrid_opt]
+        # create vector containing all surfaces
+        surfaces_opt = [wing_opt, htail_opt, vtail_opt]
+        surface_idopt = [1, 2, 3]
+
+        symmetric = [true, true, false]
+
+        system_opt = steady_analysis(surfaces_opt, ref, fs; symmetric=symmetric, surface_id=surface_idopt)
+
+        return system_opt, grids, surfaces_opt, properties_opt, symmetric
+end
+
+function CreateLiftCoefficients(cf, span, rho, Vinf, chords, num_sec)
+
+    # Assuming cf is your vector of matrices
+    z_direction_coefficients = []
+
+    # Loop through each matrix in the cf vector
+    for matrix in cf
+        # Extract the third row (z-direction force coefficients)
+        z_coefficients = matrix[3, :]
+        push!(z_direction_coefficients, z_coefficients)
+    end
+
+        z_direction_coefficients_wing = z_direction_coefficients[1]
+
+    y2 = collect(range(0, stop=span, step=0.1))
+    # Convert the list of z-direction coefficients to an array if needed
+    lifting_coefficients = hcat(z_direction_coefficients_wing...)
+    lifting_coefficients = vec(transpose(lifting_coefficients))
+
+    Lift_prime = .5*rho*Vinf^2 .*chords.*lifting_coefficients
+
+        yle_2 = [i * (span / (num_sec)) for i in 0:(num_sec)]
+
+        area_prime = trapz(yle_2, Lift_prime)
+
+        bprime = span
+        aprime = 4*area_prime/(bprime*pi)
+
+        # Calculate the ideal elliptic lift distribution
+        θ = range(0, π/2, length=100)
+        x = bprime * cos.(θ)
+        y = aprime * sin.(θ)
+        Cl_max = maximum(Lift_prime)
+        elliptical_distribution = Cl_max * sqrt.(1 .- (y2 ./ span).^2)
+
+    return yle_2, y2, Lift_prime, elliptical_distribution
 end
