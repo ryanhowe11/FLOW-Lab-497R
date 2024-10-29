@@ -10,7 +10,7 @@ global num_sec = 12
 global sec_2 = Int(.5*num_sec)
 global scale_factor = 1
 global alpha_max = 25
-
+global Chord_Length = 1
 #Creating the optimization problem
 function wing_optimizer(g, x)
 
@@ -333,7 +333,7 @@ VortexLattice.translate!(vgrid_opt, [dv, 0.0, 0.0])
 VortexLattice.translate!(vtail_opt, [dv, 0.0, 0.0])
 
 # now set normal vectors manually
-ncp = avl_normal_vector([xle[2]-xle[1], yle[2]-yle[1], zle[2]-zle[1]], 2.0*pi/180)
+ncp = avl_normal_vector([xle_opt[2]-xle_opt[1], yle[2]-yle[1], zle[2]-zle[1]], 2.0*pi/180)
 
 # overwrite normal vector for each wing panel
 for i = 1:length(wing_opt)
