@@ -233,7 +233,7 @@ function Drag_Calculation_Theta(thetaopt, num_sec, scale_factor, Chord_Length)
 return D, weight, rho, Vinf, Sref, CL, chords, fs
 end
 
-function setup(Prev_Run, num_sec, ng)
+function Theta_setup(Prev_Run, num_sec, ng)
 
     # Initialize vectors based on num_sec
     theta0 = fill(5*pi/180, num_sec+1)  # starting point
@@ -283,7 +283,7 @@ function XLE_calc(chords, num_sec)
     xle_opt = zeros(num_sec+1)
 
     for i in 1:num_sec
-        xle_opt[i] = ((1-chords[i])/2)
+        xle_opt[i+1] = (chords[1]/4 - chords[i+1]/4)
     end
 
 return xle_opt
@@ -335,7 +335,7 @@ function PlotLiftDistr(yle_2, y2, Lift_prime, elliptical_distribution)
     plot!(y2, elliptical_distribution, label="Elliptical Lift Distribution", linestyle=:dash)
 
     # Save the lift distribution plot as a PDF
-    savefig("Lift_Distribution_along_the_Span_Twist_Optimization.pdf")
+    savefig("Lift_Distribution_along_the_Span.pdf")
 end
 
 function VTK_setup(surface_opt, Vinf, alpha_angle, beta, Omega, ref, symmetric)
@@ -426,4 +426,263 @@ function CreateLiftCoefficients(cf, span, rho, Vinf, chords, num_sec)
         elliptical_distribution = Cl_max * sqrt.(1 .- (y2 ./ span).^2)
 
     return yle_2, y2, Lift_prime, elliptical_distribution
+end
+
+function chord_setup(Prev_Run, num_sec, ng)
+
+    # Initialize vectors based on num_sec
+    chord0 = fill(1.000, num_sec+1)  # starting point
+
+    if Prev_Run == 1
+        if num_sec >= length(chordopt)
+        for i = 1:length(chordopt)
+        chord0[i]=chordopt[i]
+        end
+        else
+            for i in 1:num_sec
+            chord0[i]=chordopt[i]
+            end
+        end
+    end
+
+    lchord = fill(0.001, num_sec+1)  # lower bounds on x
+    uchord = fill(5.000, num_sec+1)  # upper bounds on x
+    lg = -Inf*ones(ng)  # lower bounds on g
+    ug = zeros(ng)  # upper bounds on g
+    g = zeros(ng)
+
+    # ----- set some options ------
+    ip_options = Dict(
+        "max_iter" => 100,
+        "tol" => 1e-3
+    )
+    solver = IPOPT(ip_options)
+    options = Options(;solver, derivatives=ForwardFD())
+
+return chord0, lchord, uchord, lg, ug, options, g
+end
+
+function Airframe_Drag_Calculation_Chord(chordopt, num_sec, scale_factor)
+
+    chords=chordopt
+
+    span, rho, weight, Vinf, yle, zle, chords, theta, phi, fc, xle, c, ns, nc, spacing_s, spacing_c, alpha_angle, beta, Omega, symmetric, xle_h, yle_h, zle_h, chord_h, theta_h, phi_h, fc_h, ns_h, nc_h, spacing_s_h, spacing_c_h, mirror_h, xle_v, yle_v, zle_v, chord_v, theta_v, phi_v, fc_v, ns_v, nc_v, spacing_s_v, spacing_c_v, mirror_v, dh, dv = AirFrameChordVariables(scale_factor, num_sec, chords)
+
+    Sref, cref, rref = GetRef(c, chords, theta, span, num_sec, yle)
+    
+    ref = Reference(Sref, cref, span, rref, Vinf)
+
+    fs = Freestream(Vinf, alpha_angle, beta, Omega)
+
+    # construct surface
+    wgrid, wing = wing_to_surface_panels(xle, yle, zle, chords, theta, phi, ns, nc;
+            spacing_s=spacing_s, spacing_c=spacing_c)
+
+    # generate surface panels for horizontal tail
+    hgrid, htail = wing_to_surface_panels(xle_h, yle_h, zle_h, chord_h, theta_h, phi_h, ns_h, nc_h;
+        mirror=mirror_h, fc=fc_h, spacing_s=spacing_s_h, spacing_c=spacing_c_h)
+    VortexLattice.translate!(hgrid, [dh, 0.0, 0.0])
+    VortexLattice.translate!(htail, [dh, 0.0, 0.0])
+
+    # generate surface panels for vertical tail
+    vgrid, vtail = wing_to_surface_panels(xle_v, yle_v, zle_v, chord_v, theta_v, phi_v, ns_v, nc_v;
+        mirror=mirror_v, fc=fc_v, spacing_s=spacing_s_v, spacing_c=spacing_c_v)
+    VortexLattice.translate!(vgrid, [dv, 0.0, 0.0])
+    VortexLattice.translate!(vtail, [dv, 0.0, 0.0])
+
+    # create vector containing all surfaces
+    grids = [wgrid, hgrid, vgrid]
+    surfaces = [wing, htail, vtail]
+    surface_id = [1, 2, 3]
+
+    # we can use symmetry since the geometry and flow conditions are symmetric about the X-Z axis
+    symmetric = true
+
+    # perform steady state analysis
+    system = steady_analysis(surfaces, ref, fs; symmetric=symmetric, surface_id=surface_id)
+
+    # retrieve near-field forces
+    CF, CM = body_forces(system; frame=Wind())
+
+    println(CF)
+
+    # perform far-field analysis
+    CDiff = far_field_drag(system)
+
+    dCF, dCM = stability_derivatives(system)
+
+    CD, CY, CL = CF
+    Cl, Cm, Cn = CM
+
+    properties = get_surface_properties(system)
+
+    #write_vtk("intermediate-symmetric-planar-wing", surfaces, properties; symmetric)
+
+    D=.5*rho*Vinf^2*Sref*CD
+
+return D, weight, rho, Vinf, Sref, CL, chords, fs
+end
+
+function Drag_Calculation_Chord(chordopt, num_sec, scale_factor)
+
+    chords=chordopt
+
+    span, rho, weight, Vinf, yle, zle, chords, theta, phi, fc, xle, c, ns, nc, spacing_s, spacing_c, alpha_angle, beta, Omega, symmetric = Chord_Variables(scale_factor, num_sec, chords)
+
+    Sref, cref, rref = GetRef(c, chords, theta, span, num_sec, yle)
+    
+    ref = Reference(Sref, cref, span, rref, Vinf)
+
+    fs = Freestream(Vinf, alpha_angle, beta, Omega)
+
+    # construct surface
+    grid, surface = wing_to_surface_panels(xle, yle, zle, chords, theta, phi, ns, nc;
+        spacing_s=spacing_s, spacing_c=spacing_c)
+
+    # create vector containing all surfaces
+    surfaces = [surface]
+
+    # perform steady state analysis
+    system = steady_analysis(surfaces, ref, fs; symmetric=symmetric)
+
+    # retrieve near-field forces
+    CF, CM = body_forces(system; frame=Wind())
+
+    println(CF)
+
+    # perform far-field analysis
+    CDiff = far_field_drag(system)
+
+    dCF, dCM = stability_derivatives(system)
+
+    CD, CY, CL = CF
+    Cl, Cm, Cn = CM
+
+    properties = get_surface_properties(system)
+
+    #write_vtk("intermediate-symmetric-planar-wing", surfaces, properties; symmetric)
+
+    D=.5*rho*Vinf^2*Sref*CD
+
+return D, weight, rho, Vinf, Sref, CL, chords, fs
+end
+
+function Chord_Variables(scale_factor, num_sec, chords)
+
+    # Define inputs of function
+    span = 8.0 #one wing or the whole span       
+    rho = 1.225
+    weight = 1.7*scale_factor
+    Vinf = 1.0
+
+    # geometry (right half of the wing)
+    yle = [i * (span / (num_sec)) for i in 0:(num_sec)]
+    zle = zeros(num_sec+1)
+    theta = zeros(num_sec+1)
+    phi = zeros(num_sec+1)
+    fc = zeros(num_sec+1)
+    xle = zeros(num_sec+1)
+    c=zeros(num_sec+1)
+
+    xle = XLE_calc(chords, num_sec)
+
+    # discretization parameters
+    ns = num_sec+1
+    nc = num_sec
+    spacing_s = Uniform()
+    spacing_c = Uniform()
+
+    # freestream parameters
+    alpha_angle = 5*pi/180
+    beta = 0.0
+    Omega = [0.0; 0.0; 0.0]
+
+    # we can use symmetry since the geometry and flow conditions are symmetric about the X-Z axis
+    symmetric = true
+
+return span, rho, weight, Vinf, yle, zle, chords, theta, phi, fc, xle, c, ns, nc, spacing_s, spacing_c, alpha_angle, beta, Omega, symmetric
+end
+
+function AirFrameChordVariables(scale_factor, num_sec, chords)
+
+    # Define inputs of function
+    span = 8.0 #one wing or the whole span       
+    rho = 1.225
+    weight = 1.7*scale_factor
+    Vinf = 1.0
+
+    dh = 4
+    dv = 4
+    
+    # horizontal stabilizer
+    xle_h = [0.0, 0.14]
+    yle_h = [0.0, 1.25]
+    zle_h = [0.0, 0.0]
+    chord_h = [0.7, 0.42]
+    theta_h = [0.0, 0.0]
+    phi_h = [0.0, 0.0]
+    fc_h = fill((xc) -> 0, 2) # camberline function for each section
+    ns_h = num_sec
+    nc_h = 1
+    spacing_s_h = Uniform()
+    spacing_c_h = Uniform()
+    mirror_h = false
+    
+    # vertical stabilizer
+    xle_v = [0.0, 0.14]
+    yle_v = [0.0, 0.0]
+    zle_v = [0.0, 1.0]
+    chord_v = [0.7, 0.42]
+    theta_v = [0.0, 0.0]
+    phi_v = [0.0, 0.0]
+    fc_v = fill((xc) -> 0, 2) # camberline function for each section
+    ns_v = num_sec
+    nc_v = 1
+    spacing_s_v = Uniform()
+    spacing_c_v = Uniform()
+    mirror_v = false
+
+    # geometry (right half of the wing)
+    yle = [i * (span / (num_sec)) for i in 0:(num_sec)]
+    zle = zeros(num_sec+1)
+    theta = fill(5*pi/180, num_sec+1)
+    phi = zeros(num_sec+1)
+    fc = zeros(num_sec+1)
+    xle = zeros(num_sec+1)
+    c=zeros(num_sec+1)
+
+    xle = XLE_calc(chords, num_sec)
+
+    # discretization parameters
+    ns = num_sec+1
+    nc = num_sec
+    spacing_s = Uniform()
+    spacing_c = Uniform()
+
+    # freestream parameters
+    alpha_angle = 5*pi/180
+    beta = 0.0
+    Omega = [0.0; 0.0; 0.0]
+
+    # we can use symmetry since the geometry and flow conditions are symmetric about the X-Z axis
+    symmetric = true
+
+return span, rho, weight, Vinf, yle, zle, chords, theta, phi, fc, xle, c, ns, nc, spacing_s, spacing_c, alpha_angle, beta, Omega, symmetric, xle_h, yle_h, zle_h, chord_h, theta_h, phi_h, fc_h, ns_h, nc_h, spacing_s_h, spacing_c_h, mirror_h, xle_v, yle_v, zle_v, chord_v, theta_v, phi_v, fc_v, ns_v, nc_v, spacing_s_v, spacing_c_v, mirror_v, dh, dv
+end
+
+# Plotting function
+function plot_chords(xle_opt, yle, chords)
+    plot()
+    for i in 1:num_sec
+        x_start = xle_opt[i]
+        y_start = yle[i]
+        x_end = x_start + chords[i]
+        y_end = y_start
+        plot!([x_start, x_end], [y_start, y_end], label="Chord $i", legend=false)
+    end
+    xlabel!("yle")
+    ylabel!("xle_opt / Chord length")
+    title!("Chords at Each Section")
+
+    savefig("Chords_plot.pdf")
 end

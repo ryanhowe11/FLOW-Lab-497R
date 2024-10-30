@@ -376,11 +376,13 @@ function plot_chords(xle_opt, yle, chords)
     xlabel!("yle")
     ylabel!("xle_opt / Chord length")
     title!("Chords at Each Section")
+
+    savefig("Chords_plot_airframe.pdf")
 end
 
 # Plot the chords
 plot_chords(xle_opt, yle, chord_opt)
-savefig("Chords_plot_airframe.pdf")
+
 
 CF, CM = body_forces(system_opt; frame=Stability())
 CDiff = far_field_drag(system_opt)

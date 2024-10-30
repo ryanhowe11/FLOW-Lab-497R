@@ -12,13 +12,13 @@ include("Project4_OptimizationFunctions.jl")
 
 function run(;varopt, var)
     
-    if var == theta
+    if var == "theta"
     varopt=optimizetheta(;thetaopt = varopt)
     return varopt
     end
 
-    if var == x
-        varopt=optimizex(;xopt = varopt)
+    if var == "chord"
+        varopt=optimizechord(;chordopt = varopt)
         return varopt
     end
 
@@ -26,20 +26,21 @@ end
 
 # if thetaopt !=0
 
-# thetaopt =run(;varopt=thetaopt, var = theta)
+# thetaopt =run(;varopt=thetaopt, var = "theta")
 
 # else
 
-#     thetaopt =run(var = theta)
+#     thetaopt =run(var = "theta")
 
 # end
 
-if xopt !=0
 
-    xopt =run(;varopt=xopt, var = x)
+if chordopt !=0
+
+    chordopt =run(;varopt=chordopt, var = "chord")
 
 else
 
-    xopt =run(var = x)
+    chordopt =run(var = "chord")
 
 end
