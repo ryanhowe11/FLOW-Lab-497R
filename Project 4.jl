@@ -7,7 +7,7 @@ using Plots
 using LinearAlgebra
 using Trapz
 
-function run()
+function run(chord_opt)
 num_sec = 20
 sec_2 = Int(.5*num_sec)
 scale_factor = 5
@@ -146,7 +146,7 @@ ip_options = Dict(
     "tol" => 1e-3
 )
 solver = IPOPT(ip_options)
-options = Options(;solver, derivatives=ForwardFD())
+options = Options(;solver, derivatives=ForwardAD())
 
 xopt, fopt, info = minimize(wing_optimizer, c0, ng, lc, uc, lg, ug, options)
 
@@ -278,4 +278,7 @@ plot!(y2, elliptical_distribution, label="Elliptical Lift Distribution", linesty
 
 # Save the lift distribution plot as a PDF
 savefig("Lift_Distribution_along_the_Span_Twist_Optimization.pdf")
+return chord_opt
 end
+
+chordopt=run(chordopt)

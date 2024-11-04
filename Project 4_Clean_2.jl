@@ -24,23 +24,23 @@ function run(;varopt, var)
 
 end
 
-# if thetaopt !=0
+if thetaopt !=0
 
-# thetaopt =run(;varopt=thetaopt, var = "theta")
-
-# else
-
-#     thetaopt =run(var = "theta")
-
-# end
-
-
-if chordopt !=0
-
-    chordopt =run(;varopt=chordopt, var = "chord")
+thetaopt =run(;varopt=thetaopt, var = "theta")
 
 else
 
-    chordopt =run(var = "chord")
+    thetaopt =run(;var = "theta")
 
 end
+
+
+# if chordopt !=0
+
+#     chordopt =run(;varopt=chordopt, var = "chord")
+
+# else
+
+#     chordopt =run(;var = "chord")
+
+# end

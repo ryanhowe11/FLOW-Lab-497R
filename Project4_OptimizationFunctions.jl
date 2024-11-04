@@ -1,6 +1,6 @@
 function optimizetheta(;thetaopt)
 
-    num_sec = 12
+        num_sec = 12
         Chord_Length = 1
         scale_factor = 1
 
@@ -10,7 +10,7 @@ function optimizetheta(;thetaopt)
         Prev_Run = 0
         end
         
-        Include_Airframe = 1
+        Include_Airframe = 0
         ng = num_sec+1
 
         #Creating the optimization problem
@@ -39,12 +39,6 @@ function optimizetheta(;thetaopt)
         end
 
         theta0, ltheta, utheta, lg, ug, options, g = Theta_setup(Prev_Run, num_sec, ng)
-
-        println(size(theta0))
-        println(size(ltheta))
-        println(size(utheta))
-        println(size(lg))
-        println(size(ug))
 
         thetaopt, fopt, info = minimize(wing_optimizer, theta0, ng, ltheta, utheta, lg, ug, options)
 
@@ -119,7 +113,7 @@ function optimizechord(;chordopt)
         Prev_Run = 0
         end
         
-        Include_Airframe = 1
+        Include_Airframe = 0
         ng = 2*num_sec+1
 
         #Creating the optimization problem
@@ -142,11 +136,6 @@ function optimizechord(;chordopt)
             # Calculate chord differences
             for i in 1:num_sec
                 g[i+1] = chordopt[i+1] - chordopt[i]#+.25/num_sec
-            end
-
-            # Calculate chord differences
-            for i in num_sec+1:2*num_sec
-                g[i+1] = chordopt[i-num_sec] - chordopt[i+1-num_sec]-.5#+.25/num_sec
             end
 
         return D

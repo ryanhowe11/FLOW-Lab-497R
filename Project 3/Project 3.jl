@@ -5,9 +5,11 @@ using FiniteDiff
 using ForwardDiff
 using Plots
 
-global num_sec = 20
-global sec_2 = Int(.5*num_sec)
-global scale_factor = 5
+function run()
+
+num_sec = 12
+sec_2 = Int(.5*num_sec)
+scale_factor = 5
 #Creating the optimization problem
 function wing_optimizer(g, c)
 
@@ -119,15 +121,15 @@ end
 # Initialize vectors based on num_sec
 c0 = ones(num_sec+1)  # starting point
 
-if num_sec >= length(chord_opt)
-for i in 1:length(chord_opt)
-c0[i]=chord_opt[i]
-end
-else
-    for i in 1:num_sec
-    c0[i]=chord_opt[i]
-    end
-end
+# if num_sec >= length(chord_opt)
+# for i in 1:length(chord_opt)
+# c0[i]=chord_opt[i]
+# end
+# else
+#     for i in 1:num_sec
+#     c0[i]=chord_opt[i]
+#     end
+# end
 
 lc = fill(0.01, num_sec+1)  # lower bounds on x
 uc = fill(5.0, num_sec+1)  # upper bounds on x
@@ -227,3 +229,7 @@ end
 
 # Plot the chords
 plot_chords(xle_opt, yle, chord_opt)
+return chord_opt
+end
+
+chord_opt=run()
