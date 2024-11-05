@@ -10,15 +10,15 @@ function OptimizeChord(num_sec, scale_factor)
 
     chord_opt, fopt, info = RunOptimizer(num_sec, scale_factor)
 
-    span, rho, Vinf, weight, yle, zle, theta, phi, fc, xle, ns, nc, spacing_s, spacing_c = ProblemSetup(num_sec, scale_factor)
+    chords, span, rho, Vinf, weight, yle, zle, theta, phi, fc, xle, ns, nc, spacing_s, spacing_c = ProblemSetup(num_sec, scale_factor, chord_opt)
 
-    chords = zeros(num_sec+1)
+#    chords = zeros(num_sec+1)
 
-    for i in 1:num_sec+1
-    chords[i] = chord_opt[i]
-    end
+#    for i in 1:num_sec+1
+#    chords[i] = chord_opt[i]
+#    end
 
-    Vinf=5*chord_opt[num_sec+2]
+#    Vinf=5*chord_opt[num_sec+2]
 
     xle_opt = XLEcalc(xle, chords, num_sec)
 
