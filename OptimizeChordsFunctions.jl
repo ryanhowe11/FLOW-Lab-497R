@@ -1,11 +1,18 @@
     #Setting up all the problem variables
-    function ProblemSetup(num_sec, scale_factor)
+    function ProblemSetup(num_sec, scale_factor, chord_opt)
         # Define inputs of function
      span = 8.0 #one wing or the whole span       
      rho = 1.225
      Vinf = 1.0
      weight = 1.7*scale_factor
 
+		 chords = zeros(num_sec+1)
+
+   	 for i in 1:num_sec+1
+     chords[i] = chord_opt[i]
+     end
+
+     Vinf=5*chord_opt[num_sec+2]
 
      # geometry (right half of the wing)
      yle = [i * (span / (num_sec)) for i in 0:(num_sec)]
@@ -21,7 +28,7 @@
      spacing_s = Uniform()
      spacing_c = Uniform()
     
- return span, rho, Vinf, weight, yle, zle, theta, phi, fc, xle, ns, nc, spacing_s, spacing_c
+ return chords, span, rho, Vinf, weight, yle, zle, theta, phi, fc, xle, ns, nc, spacing_s, spacing_c
  end
 
  #Find the leading edge values assuming zero sweep
@@ -138,15 +145,7 @@
     #Creating the optimization problem
     function wing_optimizer(g, c)
 
-        span, rho, Vinf, weight, yle, zle, theta, phi, fc, xle, ns, nc, spacing_s, spacing_c = ProblemSetup(num_sec, scale_factor)
-
-        chords = zeros(num_sec+1)
-
-        for i in 1:num_sec+1
-        chords[i] = c[i]
-        end
-
-        Vinf=5*c[num_sec+2]
+        chords, span, rho, Vinf, weight, yle, zle, theta, phi, fc, xle, ns, nc, spacing_s, spacing_c = ProblemSetup(num_sec, scale_factor, c)
 
         xle = XLEcalc(xle, chords, num_sec)
 
