@@ -87,7 +87,7 @@
  #Setting Up Optimization Problem Variables
  function OptimizationSetup(num_sec)
      # Initialize vectors based on num_sec
-     c0 = ones(num_sec+1)  # starting point
+     c0 = ones(num_sec+2)  # starting point
  
      # if num_sec >= length(chord_opt)
      # for i in 1:length(chord_opt)
@@ -99,8 +99,8 @@
      #     end
      # end
  
-     lc = fill(0.01, num_sec+1)  # lower bounds on x
-     uc = fill(5.0, num_sec+1)  # upper bounds on x
+     lc = fill(0.01, num_sec+2)  # lower bounds on x
+     uc = fill(5.0, num_sec+2)  # upper bounds on x
      ng = 2 + num_sec  # number of constraints
      lg = -Inf*one(ng)  # lower bounds on g
      ug = zeros(ng)  # upper bounds on g
@@ -140,7 +140,13 @@
 
         span, rho, Vinf, weight, yle, zle, theta, phi, fc, xle, ns, nc, spacing_s, spacing_c = ProblemSetup(num_sec, scale_factor)
 
-        chords = c
+        chords = zeros(num_sec+1)
+
+        for i in 1:num_sec+1
+        chords[i] = c[i]
+        end
+
+        Vinf=5*c[num_sec+2]
 
         xle = XLEcalc(xle, chords, num_sec)
 
@@ -168,7 +174,9 @@
             g[i+2] = c[i+1] - c[i]
         end
 
-    return D
+        O=D/(L*Vinf)
+
+    return O
     end
 
     xopt, fopt, info = minimize(wing_optimizer, c0, ng, lc, uc, lg, ug, options)
