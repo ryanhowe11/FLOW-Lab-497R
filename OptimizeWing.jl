@@ -6,9 +6,19 @@ using ForwardDiff
 using Plots
 include("Project5Functions.jl")
 
-function OptimizeChord(num_sec, scale_factor)
+function OptimizeWing(num_sec, scale_factor)
 
-    chord_opt, fopt, info = RunOptimizer(num_sec, scale_factor)
+    x_opt, fopt, info = RunOptimizer(num_sec, scale_factor)
+
+    for i in 1:num_sec+1
+        theta_opt[i] = x_opt[i+num_sec+1]/19
+    end
+
+    span_opt = 4 * xopt[num_sec+3]
+
+    for i in 1:num_sec+1
+        chord_opt[i] = x_opt[i]
+    end
 
     span, rho, Vinf, weight, yle, zle, theta, phi, fc, xle, ns, nc, spacing_s, spacing_c = ProblemSetup(num_sec, scale_factor)
 
@@ -16,12 +26,12 @@ function OptimizeChord(num_sec, scale_factor)
 
     symmetric = true
 
-    Sref, ref = ReferenceCalculation(num_sec, yle, span, Vinf, chord_opt)
+    Sref, ref = ReferenceCalculation(num_sec, yle, span_opt, Vinf, chord_opt, theta_opt)
 
     fs = FreestreamParams(Vinf)
 
     # reconstruct surface
-    grid_opt, surface_opt = wing_to_surface_panels(xle_opt, yle, zle, chord_opt, theta, phi, ns, nc;
+    grid_opt, surface_opt = wing_to_surface_panels(xle_opt, yle, zle, chord_opt, theta_opt, phi, ns, nc;
         spacing_s=spacing_s, spacing_c=spacing_c)
 
     # create vector containing all surfaces
