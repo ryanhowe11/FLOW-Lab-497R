@@ -4,11 +4,9 @@ using Ipopt
 using FiniteDiff
 using ForwardDiff
 using Plots
-include("Project5FunctionsAirframe.jl")
+include("OptimizeChordsFunctions.jl")
 
-function ChordOptFrame()
-    num_sec = 14
-    scale_factor = 5
+function OptimizeChord(num_sec, scale_factor)
 
     chord_opt, fopt, info = RunOptimizer(num_sec, scale_factor)
 
@@ -39,8 +37,8 @@ function ChordOptFrame()
     println("Optimized chord values: ", chord_opt)
 
     # Plot the chords
-    plot_chords(xle_opt, yle, chord_opt)
+    plot_chords(xle_opt, yle, chord_opt, num_sec)
     savefig("Chord Plot")
 end
 
-ChordOptFrame()
+OptimizeChord(12, 5)

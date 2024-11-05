@@ -1,5 +1,7 @@
+    using LinearAlgebra
+    
     #Setting up all the problem variables
-    function ProblemSetupFrame(num_sec, scale_factor)
+    function ProblemSetup(num_sec, scale_factor)
         # Define inputs of function
      span = 8.0 #one wing or the whole span       
      rho = 1.225
@@ -35,7 +37,7 @@
  end
 
  #Define your references such as area and position
- function ReferenceCalculationFrame(num_sec, yle, span, Vinf, c)
+ function ReferenceCalculation(num_sec, yle, span, Vinf, c)
 
      Sref= 0.0
 
@@ -55,7 +57,7 @@
  end
 
  #gives you your fs variable to use in Vortex Lattice
- function FreestreamParamsFrame(Vinf)
+ function FreestreamParams(Vinf)
 
      # freestream parameters
      alpha_angle = 5.0*pi/180
@@ -67,13 +69,14 @@
  end
 
  #Finds the coefficients of lift and drag for whole system
- function CalculateSurfaceForcesCoeffFrame(surface, ref, fs, symmetric)
+ function CalculateSurfaceForcesCoeff(surface, htail, vtail, ref, fs, symmetric)
 
      # create vector containing all surfaces
-     surfaces = [surface]
+     surfaces = [surface, htail, vtail]
+     surface_id = [1, 2, 3]
 
      # perform steady state analysis
-     system = steady_analysis(surfaces, ref, fs; symmetric=symmetric)
+     system = steady_analysis(surfaces, ref, fs; symmetric=symmetric, surface_id=surface_id)
 
      # retrieve near-field forces
      CF, CM = body_forces(system; frame=Wind())
@@ -85,7 +88,7 @@
  end
 
  #Setting Up Optimization Problem Variables
- function OptimizationSetup()
+ function OptimizationSetup(num_sec)
      # Initialize vectors based on num_sec
      c0 = ones(num_sec+1)  # starting point
  
@@ -117,7 +120,7 @@
  end
  
  # Plotting function
- function plot_chordsFrame(xle_opt, yle, chords)
+ function plot_chords(xle_opt, yle, chords, num_sec)
      plot()
      for i in 1:num_sec
          x_start = xle_opt[i]
@@ -131,28 +134,45 @@
      title!("Chords at Each Section")
  end
 
- function RunOptimizerFrame(num_sec, scale_factor)
+ function RunOptimizer(num_sec, scale_factor)
+
+    c0, ng, lc, uc, lg, ug, options, g = OptimizationSetup(num_sec)
+
     #Creating the optimization problem
     function wing_optimizer(g, c)
 
         span, rho, Vinf, weight, yle, zle, theta, phi, fc, xle, ns, nc, spacing_s, spacing_c = ProblemSetup(num_sec, scale_factor)
 
+        xle_h, yle_h, zle_h, chord_h, theta_h, phi_h, fc_h, ns_h, nc_h, spacing_s_h, spacing_c_h, mirror_h, xle_v, yle_v, zle_v, chord_v, theta_v, phi_v, fc_v, ns_v, nc_v, spacing_s_v, spacing_c_v, mirror_v=SetUpTail()
+
         chords = c
 
         xle = XLEcalc(xle, chords, num_sec)
 
-        Sref, ref = ReferenceCalculationFrame(num_sec, yle, span, Vinf, c)
+        Sref, ref = ReferenceCalculation(num_sec, yle, span, Vinf, c)
 
-        fs = FreestreamParamsFrame(Vinf)
+        fs = FreestreamParams(Vinf)
 
         # construct surface
         grid, surface = wing_to_surface_panels(xle, yle, zle, chords, theta, phi, ns, nc;
         spacing_s=spacing_s, spacing_c=spacing_c)
 
-            # we can use symmetry since the geometry and flow conditions are symmetric about the X-Z axis
-        symmetric = true
+        # generate surface panels for horizontal tail
+        hgrid, htail = wing_to_surface_panels(xle_h, yle_h, zle_h, chord_h, theta_h, phi_h, ns_h, nc_h;
+        mirror=mirror_h, fc=fc_h, spacing_s=spacing_s_h, spacing_c=spacing_c_h)
+        # translate!(hgrid, [4.0, 0.0, 0.0])
+        # translate!(htail, [4.0, 0.0, 0.0])
 
-        CL, CD = CalculateSurfaceForcesCoeffFrame(surface, ref, fs, symmetric)
+        # generate surface panels for vertical tail
+        vgrid, vtail = wing_to_surface_panels(xle_v, yle_v, zle_v, chord_v, theta_v, phi_v, ns_v, nc_v;
+        mirror=mirror_v, fc=fc_v, spacing_s=spacing_s_v, spacing_c=spacing_c_v)
+        # translate!(vgrid, [4.0, 0.0, 0.0])
+        # translate!(vtail, [4.0, 0.0, 0.0])
+
+            # we can use symmetry since the geometry and flow conditions are symmetric about the X-Z axis
+        symmetric = [true, true, false]
+
+        CL, CD = CalculateSurfaceForcesCoeff(surface, htail, vtail, ref, fs, symmetric)
 
         D=.5*rho*Vinf^2*Sref*CD
         L = .5*rho*Vinf^2*Sref*CL
@@ -168,9 +188,40 @@
     return D
     end
 
-    c0, ng, lc, uc, lg, ug, options, g = OptimizationSetup()
-
     xopt, fopt, info = minimize(wing_optimizer, c0, ng, lc, uc, lg, ug, options)
 
 return xopt, fopt, info
+end
+
+function SetUpTail()
+
+    # horizontal stabilizer
+    xle_h = [0.0, 0.14]
+    yle_h = [0.0, 1.25]
+    zle_h = [0.1, 0.1]
+    chord_h = [0.7, 0.42]
+    theta_h = [0.0, 0.0]
+    phi_h = [0.0, 0.0]
+    fc_h = fill((xc) -> 0, 2) #camberline function for each section
+    ns_h = 6
+    nc_h = 3
+    spacing_s_h = Uniform()
+    spacing_c_h = Uniform()
+    mirror_h = false
+
+    # vertical stabilizer
+    xle_v = [0.0, 0.14]
+    yle_v = [0.0, 0.0]
+    zle_v = [0.1, 1.1]
+    chord_v = [0.7, 0.42]
+    theta_v = [0.0, 0.0]
+    phi_v = [0.0, 0.0]
+    fc_v = fill((xc) -> 0, 2) #camberline function for each section
+    ns_v = 5
+    nc_v = 3
+    spacing_s_v = Uniform()
+    spacing_c_v = Uniform()
+    mirror_v = false
+
+return xle_h, yle_h, zle_h, chord_h, theta_h, phi_h, fc_h, ns_h, nc_h, spacing_s_h, spacing_c_h, mirror_h, xle_v, yle_v, zle_v, chord_v, theta_v, phi_v, fc_v, ns_v, nc_v, spacing_s_v, spacing_c_v, mirror_v
 end

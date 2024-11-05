@@ -4,7 +4,8 @@ using Ipopt
 using FiniteDiff
 using ForwardDiff
 using Plots
-include("Project5Functions.jl")
+using LinearAlgebra
+include("OptimizeAirframeFunctions.jl")
 
 function OptimizeChord(num_sec, scale_factor)
 
@@ -41,4 +42,4 @@ function OptimizeChord(num_sec, scale_factor)
     savefig("Chord Plot")
 end
 
-OptimizeChord(12, 5)
+OptimizeChord(16, 5)
