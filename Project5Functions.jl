@@ -85,7 +85,7 @@
  end
 
  #Setting Up Optimization Problem Variables
- function OptimizationSetup()
+ function OptimizationSetup(num_sec)
      # Initialize vectors based on num_sec
      c0 = ones(num_sec+1)  # starting point
  
@@ -117,7 +117,7 @@
  end
  
  # Plotting function
- function plot_chords(xle_opt, yle, chords)
+ function plot_chords(xle_opt, yle, chords, num_sec)
      plot()
      for i in 1:num_sec
          x_start = xle_opt[i]
@@ -132,6 +132,9 @@
  end
 
  function RunOptimizer(num_sec, scale_factor)
+
+    c0, ng, lc, uc, lg, ug, options, g = OptimizationSetup(num_sec)
+
     #Creating the optimization problem
     function wing_optimizer(g, c)
 
@@ -167,8 +170,6 @@
 
     return D
     end
-
-    c0, ng, lc, uc, lg, ug, options, g = OptimizationSetup()
 
     xopt, fopt, info = minimize(wing_optimizer, c0, ng, lc, uc, lg, ug, options)
 

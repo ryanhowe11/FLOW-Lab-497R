@@ -6,8 +6,7 @@ using ForwardDiff
 using Plots
 include("Project5Functions.jl")
 
-    num_sec = 16
-    scale_factor = 5
+function OptimizeChord(num_sec, scale_factor)
 
     chord_opt, fopt, info = RunOptimizer(num_sec, scale_factor)
 
@@ -38,5 +37,8 @@ include("Project5Functions.jl")
     println("Optimized chord values: ", chord_opt)
 
     # Plot the chords
-    plot_chords(xle_opt, yle, chord_opt)
+    plot_chords(xle_opt, yle, chord_opt, num_sec)
     savefig("Chord Plot")
+end
+
+OptimizeChord(16, 5)
