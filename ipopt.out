@@ -16,29 +16,30 @@ Total number of inequality constraints...............:       14
 
 iter    objective    inf_pr   inf_du lg(mu)  ||d||  lg(rg) alpha_du alpha_pr  ls
    0  1.9270760e-03 0.00e+00 1.00e+00   0.0 0.00e+00    -  0.00e+00 0.00e+00   0
-   1  1.9150443e-03 0.00e+00 5.07e-02  -5.6 4.51e-02    -  9.49e-01 1.00e+00h  1
-   2  1.9082362e-03 0.00e+00 4.88e-03  -6.9 1.40e-02    -  9.89e-01 1.00e+00h  1
-   3  1.5454631e-03 0.00e+00 1.60e-04  -4.4 1.20e+00    -  9.61e-01 1.00e+00h  1
-   4  3.8898873e-04 0.00e+00 4.93e-04  -5.0 3.79e+00    -  9.65e-01 1.00e+00h  1
+   1  1.9150800e-03 0.00e+00 5.07e-02  -5.7 4.51e-02    -  9.49e-01 1.00e+00h  1
+   2  1.9084654e-03 0.00e+00 4.83e-03  -7.0 3.36e-03    -  9.89e-01 1.00e+00h  1
+   3  1.5369894e-03 0.00e+00 1.52e-04  -4.4 3.51e-01    -  9.63e-01 1.00e+00h  1
+   4  4.3738906e-04 2.89e+01 4.05e-04  -5.2 3.04e+00    -  9.78e-01 1.00e+00h  1
+   5  4.4896944e-04 0.00e+00 4.77e-04  -4.7 8.29e-01    -  8.63e-01 1.00e+00h  1
 
-Number of Iterations....: 4
+Number of Iterations....: 5
 
                                    (scaled)                 (unscaled)
-Objective...............:   3.8898872564774149e-04    3.8898872564774149e-04
-Dual infeasibility......:   4.9288024946888209e-04    4.9288024946888209e-04
+Objective...............:   4.4896944258212472e-04    4.4896944258212472e-04
+Dual infeasibility......:   4.7681067321080588e-04    4.7681067321080588e-04
 Constraint violation....:   0.0000000000000000e+00    0.0000000000000000e+00
 Variable bound violation:   0.0000000000000000e+00    0.0000000000000000e+00
-Complementarity.........:   3.7479898290140350e-05    3.7479898290140350e-05
-Overall NLP error.......:   4.9288024946888209e-04    4.9288024946888209e-04
+Complementarity.........:   3.6039357384931190e-05    3.6039357384931190e-05
+Overall NLP error.......:   4.7681067321080588e-04    4.7681067321080588e-04
 
 
-Number of objective function evaluations             = 5
-Number of objective gradient evaluations             = 5
+Number of objective function evaluations             = 6
+Number of objective gradient evaluations             = 6
 Number of equality constraint evaluations            = 0
-Number of inequality constraint evaluations          = 5
+Number of inequality constraint evaluations          = 6
 Number of equality constraint Jacobian evaluations   = 0
-Number of inequality constraint Jacobian evaluations = 5
+Number of inequality constraint Jacobian evaluations = 6
 Number of Lagrangian Hessian evaluations             = 0
-Total seconds in IPOPT                               = 11.342
+Total seconds in IPOPT                               = 9.674
 
 EXIT: Optimal Solution Found.
