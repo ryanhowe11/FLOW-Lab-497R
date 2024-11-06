@@ -6,7 +6,9 @@
      Vinf = 1.0
      weight = 1.7*scale_factor
 
-		 chords = zeros(num_sec+1)
+     T = eltype(chord_opt)
+
+	chords = zeros(T, num_sec+1)
 
    	 for i in 1:num_sec+1
      chords[i] = chord_opt[i]
@@ -15,12 +17,13 @@
      Vinf=5*chord_opt[num_sec+2]
 
      # geometry (right half of the wing)
+     yle = zeros(T, num_sec+1)
      yle = [i * (span / (num_sec)) for i in 0:(num_sec)]
-     zle = zeros(num_sec+1)
-     theta = zeros(num_sec+1)
-     phi = zeros(num_sec+1)
-     fc = zeros(num_sec+1)
-     xle = zeros(num_sec+1)
+     zle = zeros(T, num_sec+1)
+     theta = zeros(T, num_sec+1)
+     phi = zeros(T, num_sec+1)
+     fc = zeros(T, num_sec+1)
+     xle = zeros(T, num_sec+1)
 
          # discretization parameters
      ns = num_sec
@@ -119,7 +122,7 @@
          "tol" => 1e-3
      )
      solver = IPOPT(ip_options)
-     options = Options(;solver, derivatives=ForwardFD())
+     options = Options(;solver, derivatives=ForwardAD())
      return c0, ng, lc, uc, lg, ug, options, g
  end
  
