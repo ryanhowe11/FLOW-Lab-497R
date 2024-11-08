@@ -56,4 +56,4 @@ function OptimizeChord(num_sec, scale_factor)
     savefig("Chord Plot")
 end
 
-OptimizeChord(3, 1)
+OptimizeChord(12, 10)
