@@ -1,23 +1,22 @@
+    using LinearAlgebra
+    
     #Setting up all the problem variables
-    function ProblemSetup(num_sec, scale_factor, chord_opt)
+    function ProblemSetup(num_sec, scale_factor, c)
+    T = eltype(c)
         # Define inputs of function
      span = 8.0 #one wing or the whole span       
      rho = 1.225
-     Vinf = 1.0
+     Vinf = 5*c[num_sec+2]
      weight = 1.7*scale_factor
 
-     T = eltype(chord_opt)
+    chords = zeros(num_sec+1)
+    
+    for i in 1:num_sec+1
+    chords[i] = c[i]
+    end
 
-	chords = zeros(T, num_sec+1)
-
-   	 for i in 1:num_sec+1
-     chords[i] = chord_opt[i]
-     end
-
-     Vinf=5*chord_opt[num_sec+2]
-
+     yle=zeros(T, num_sec+1)
      # geometry (right half of the wing)
-     yle = zeros(T, num_sec+1)
      yle = [i * (span / (num_sec)) for i in 0:(num_sec)]
      zle = zeros(T, num_sec+1)
      theta = zeros(T, num_sec+1)
@@ -25,12 +24,16 @@
      fc = zeros(T, num_sec+1)
      xle = zeros(T, num_sec+1)
 
+     for i in 1:num_sec
+        xle[i+1] = (chords[1]/4 - chords[i+1]/4)
+    end
+
          # discretization parameters
      ns = num_sec
      nc = num_sec
      spacing_s = Uniform()
      spacing_c = Uniform()
-    
+
  return chords, span, rho, Vinf, weight, yle, zle, theta, phi, fc, xle, ns, nc, spacing_s, spacing_c
  end
 
@@ -77,10 +80,10 @@
  end
 
  #Finds the coefficients of lift and drag for whole system
- function CalculateSurfaceForcesCoeff(wing, htail, vtail, ref, fs, symmetric)
+ function CalculateSurfaceForcesCoeff(surface, htail, vtail, ref, fs, symmetric)
 
      # create vector containing all surfaces
-     surfaces = [wing, htail, vtail]
+     surfaces = [surface, htail, vtail]
      surface_id = [1, 2, 3]
 
      # perform steady state analysis
@@ -123,7 +126,7 @@
          "tol" => 1e-3
      )
      solver = IPOPT(ip_options)
-     options = Options(;solver, derivatives=ForwardAD())
+     options = Options(;solver, derivatives=ForwardFD())
      return c0, ng, lc, uc, lg, ug, options, g
  end
  
@@ -153,32 +156,32 @@
 
         xle_h, yle_h, zle_h, chord_h, theta_h, phi_h, fc_h, ns_h, nc_h, spacing_s_h, spacing_c_h, mirror_h, xle_v, yle_v, zle_v, chord_v, theta_v, phi_v, fc_v, ns_v, nc_v, spacing_s_v, spacing_c_v, mirror_v=SetUpTail()
 
-        xle = XLEcalc(xle, chords, num_sec)
+        # xle = XLEcalc(xle, chords, num_sec)
 
         Sref, ref = ReferenceCalculation(num_sec, yle, span, Vinf, c)
 
         fs = FreestreamParams(Vinf)
 
         # construct surface
-        grid, wing = wing_to_surface_panels(xle, yle, zle, chords, theta, phi, ns, nc;
+        grid, surface = wing_to_surface_panels(xle, yle, zle, chords, theta, phi, ns, nc;
         spacing_s=spacing_s, spacing_c=spacing_c)
 
         # generate surface panels for horizontal tail
         hgrid, htail = wing_to_surface_panels(xle_h, yle_h, zle_h, chord_h, theta_h, phi_h, ns_h, nc_h;
         mirror=mirror_h, fc=fc_h, spacing_s=spacing_s_h, spacing_c=spacing_c_h)
-        # translate!(hgrid, [4.0, 0.0, 0.0])
-        # translate!(htail, [4.0, 0.0, 0.0])
+        translate!(hgrid, [4.0, 0.0, 0.0])
+        translate!(htail, [4.0, 0.0, 0.0])
 
         # generate surface panels for vertical tail
         vgrid, vtail = wing_to_surface_panels(xle_v, yle_v, zle_v, chord_v, theta_v, phi_v, ns_v, nc_v;
         mirror=mirror_v, fc=fc_v, spacing_s=spacing_s_v, spacing_c=spacing_c_v)
-        # translate!(vgrid, [4.0, 0.0, 0.0])
-        # translate!(vtail, [4.0, 0.0, 0.0])
+        translate!(vgrid, [4.0, 0.0, 0.0])
+        translate!(vtail, [4.0, 0.0, 0.0])
 
-        # we can use symmetry since the geometry and flow conditions are symmetric about the X-Z axis
+            # we can use symmetry since the geometry and flow conditions are symmetric about the X-Z axis
         symmetric = [true, true, false]
 
-        CL, CD = CalculateSurfaceForcesCoeff(wing, htail, vtail, ref, fs, symmetric)
+        CL, CD = CalculateSurfaceForcesCoeff(surface, htail, vtail, ref, fs, symmetric)
 
         D=.5*rho*Vinf^2*Sref*CD
         L = .5*rho*Vinf^2*Sref*CL
@@ -191,7 +194,7 @@
             g[i+2] = c[i+1] - c[i]
         end
 
-        O=D/(L*Vinf)
+        O=D/(sqrt(L)*Vinf)
 
     return O
     end

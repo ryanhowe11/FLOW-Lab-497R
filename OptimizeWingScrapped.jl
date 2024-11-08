@@ -4,7 +4,7 @@ using Ipopt
 using FiniteDiff
 using ForwardDiff
 using Plots
-include("Project5Functions.jl")
+include("OptimizeWingScrappedFunctions.jl")
 
 function OptimizeWing(num_sec, scale_factor)
 
