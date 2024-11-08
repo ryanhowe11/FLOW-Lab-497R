@@ -9,7 +9,7 @@
      Vinf = 5*c[num_sec+2]
      weight = 1.7*scale_factor
 
-    chords = zeros(num_sec+1)
+    chords = zeros(T, num_sec+1)
     
     for i in 1:num_sec+1
     chords[i] = c[i]
@@ -126,7 +126,7 @@
          "tol" => 1e-3
      )
      solver = IPOPT(ip_options)
-     options = Options(;solver, derivatives=ForwardFD())
+     options = Options(;solver, derivatives=ForwardAD())
      return c0, ng, lc, uc, lg, ug, options, g
  end
  
