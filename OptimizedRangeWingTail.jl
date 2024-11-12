@@ -18,6 +18,8 @@ function OptimizeChord(num_sec, density, xstart)
 
     Sref, ref = ReferenceCalculation(num_sec, yle, span, Vinf, chord_opt)
 
+    println(Sref)
+
     fs = FreestreamParams(Vinf)
 
     # construct surface
@@ -27,14 +29,14 @@ function OptimizeChord(num_sec, density, xstart)
     # generate surface panels for horizontal tail
     hgrid_opt, htail_opt = wing_to_surface_panels(xle_h, yle_h, zle_h, chord_h, theta_h, phi_h, ns_h, nc_h;
     mirror=mirror_h, fc=fc_h, spacing_s=spacing_s_h, spacing_c=spacing_c_h)
-    translate!(hgrid, [dt, 0.0, 0.0])
-    translate!(htail, [dt, 0.0, 0.0])
+    VortexLattice.translate!(hgrid_opt, [dt, 0.0, 0.0])
+    VortexLattice.translate!(htail_opt, [dt, 0.0, 0.0])
 
     # generate surface panels for vertical tail
     vgrid_opt, vtail_opt = wing_to_surface_panels(xle_v, yle_v, zle_v, chord_v, theta_v, phi_v, ns_v, nc_v;
     mirror=mirror_v, fc=fc_v, spacing_s=spacing_s_v, spacing_c=spacing_c_v)
-    translate!(vgrid, [dt, 0.0, 0.0])
-    translate!(vtail, [dt, 0.0, 0.0])
+    VortexLattice.translate!(vgrid_opt, [dt, 0.0, 0.0])
+    VortexLattice.translate!(vtail_opt, [dt, 0.0, 0.0])
 
             # we can use symmetry since the geometry and flow conditions are symmetric about the X-Z axis
     symmetric = [true, true, false]
@@ -60,25 +62,26 @@ function OptimizeChord(num_sec, density, xstart)
     return xopt
 end
 
+density=50
 N=10
 if @isdefined(xstart)
     if length(xstart) == N+5
-    I=xstart
-    xstart=OptimizeChord(N, 1, I)
+    xstart_vec=xstart
+    xstart=OptimizeChord(N, density, xstart_vec)
     elseif length(xstart) > N+5
-        I=ones(N+5)
+        xstart_vec=ones(N+5)
         for i in 1:N+5
-        I[i]=xstart[i]
+        xstart_vec[i]=xstart[i]
         end
-        xstart=OptimizeChord(N, 1, I)
+        xstart=OptimizeChord(N, density, xstart_vec)
     else
-        I=ones(N+5)
+        xstart_vec=ones(N+5)
         for i in 1:length(xstart)
-        I[i]=xstart[i]
+            xstart_vec[i]=xstart[i]
         end
-        xstart=OptimizeChord(N, 1, I)
+        xstart=OptimizeChord(N, density, xstart_vec)
     end
 else
-    I=ones(N+5)
-    xstart=OptimizeChord(N, 1, I)
+    xstart_vec=ones(N+5)
+    xstart=OptimizeChord(N, density, xstart_vec)
 end

@@ -6,7 +6,7 @@ T = eltype(c)
     # Define inputs of function
  span = 8.0 #one wing or the whole span       
  rho = 1.225
- Vinf = 5*c[num_sec+2]
+ Vinf = 2*c[num_sec+2]
 
 chords = zeros(num_sec+1)
 
@@ -17,7 +17,7 @@ end
 # Calculate the average
 average_chord = mean(chords)
 
-dt=5*c[num_sec+3]
+dt=c[num_sec+3]
 lh=c[num_sec+4]
 lv=c[num_sec+5]
 
@@ -142,6 +142,7 @@ end
 
 # Plotting function
 function plot_chords(xle_opt, yle, chords, num_sec)
+
  plot()
  for i in 1:num_sec
      x_start = xle_opt[i]
@@ -179,14 +180,14 @@ function wing_optimizer(g, c)
     # generate surface panels for horizontal tail
     hgrid, htail = wing_to_surface_panels(xle_h, yle_h, zle_h, chord_h, theta_h, phi_h, ns_h, nc_h;
     mirror=mirror_h, fc=fc_h, spacing_s=spacing_s_h, spacing_c=spacing_c_h)
-    translate!(hgrid, [dt, 0.0, 0.0])
-    translate!(htail, [dt, 0.0, 0.0])
+    VortexLattice.translate!(hgrid, [dt, 0.0, 0.0])
+    VortexLattice.translate!(htail, [dt, 0.0, 0.0])
 
     # generate surface panels for vertical tail
     vgrid, vtail = wing_to_surface_panels(xle_v, yle_v, zle_v, chord_v, theta_v, phi_v, ns_v, nc_v;
     mirror=mirror_v, fc=fc_v, spacing_s=spacing_s_v, spacing_c=spacing_c_v)
-    translate!(vgrid, [dt, 0.0, 0.0])
-    translate!(vtail, [dt, 0.0, 0.0])
+    VortexLattice.translate!(vgrid, [dt, 0.0, 0.0])
+    VortexLattice.translate!(vtail, [dt, 0.0, 0.0])
 
         # we can use symmetry since the geometry and flow conditions are symmetric about the X-Z axis
     symmetric = [true, true, false]
@@ -246,10 +247,6 @@ function SetUpTail(c, lh, lv)
     theta_h = Array{T}([0.0, 0.0])
     phi_h = Array{T}([0.0, 0.0])
     fc_h = fill((xc) -> 0, 2) #camberline function for each section
-    # Specify the type of the array
-    fc_h_typed = Array{Function}(undef, 2)
-    # Fill the typed array with the same function
-    fc_h_typed .= fill((xc) -> 0, 2)
     ns_h = 6
     nc_h = 3
     spacing_s_h = Uniform()
@@ -264,17 +261,13 @@ function SetUpTail(c, lh, lv)
     theta_v = Array{T}([0.0, 0.0])
     phi_v = Array{T}([0.0, 0.0])
     fc_v = fill((xc) -> 0, 2) #camberline function for each section
-    # Specify the type of the array
-    fc_v_typed = Array{Function}(undef, 2)
-    # Fill the typed array with the same function
-    fc_v_typed .= fill((xc) -> 0, 2)
     ns_v = 5
     nc_v = 3
     spacing_s_v = Uniform()
     spacing_c_v = Uniform()
     mirror_v = false
 
-return xle_h, yle_h, zle_h, chord_h, theta_h, phi_h, fc_h_typed, ns_h, nc_h, spacing_s_h, spacing_c_h, mirror_h, xle_v, yle_v, zle_v, chord_v, theta_v, phi_v, fc_v_typed, ns_v, nc_v, spacing_s_v, spacing_c_v, mirror_v
+return xle_h, yle_h, zle_h, chord_h, theta_h, phi_h, fc_h, ns_h, nc_h, spacing_s_h, spacing_c_h, mirror_h, xle_v, yle_v, zle_v, chord_v, theta_v, phi_v, fc_v, ns_v, nc_v, spacing_s_v, spacing_c_v, mirror_v
 end
 
 function GetStabilityDerivatives(surface, htail, vtail, ref, fs, symmetric)
