@@ -4,16 +4,17 @@ using Ipopt
 using FiniteDiff
 using ForwardDiff
 using Plots
+using Statistics
 using LinearAlgebra
 include("OptimizedRangeWingTailFunctions.jl")
 
-function OptimizeChord(num_sec, scale_factor, xstart)
+function OptimizeChord(num_sec, density, xstart)
 
-    xopt, fopt, info = RunOptimizer(num_sec, scale_factor, xstart)
+    xopt, fopt, info = RunOptimizer(num_sec, density, xstart)
 
-    dt, chord_opt, span, rho, Vinf, weight, yle, zle, theta, phi, fc, xle, ns, nc, spacing_s, spacing_c = ProblemSetup(num_sec, scale_factor, xopt)
+    lh, lv, dt, chord_opt, span, rho, Vinf, weight, yle, zle, theta, phi, fc, xle, ns, nc, spacing_s, spacing_c = ProblemSetup(num_sec, density, xopt)
 
-    xle_h, yle_h, zle_h, chord_h, theta_h, phi_h, fc_h, ns_h, nc_h, spacing_s_h, spacing_c_h, mirror_h, xle_v, yle_v, zle_v, chord_v, theta_v, phi_v, fc_v, ns_v, nc_v, spacing_s_v, spacing_c_v, mirror_v=SetUpTail()
+    xle_h, yle_h, zle_h, chord_h, theta_h, phi_h, fc_h, ns_h, nc_h, spacing_s_h, spacing_c_h, mirror_h, xle_v, yle_v, zle_v, chord_v, theta_v, phi_v, fc_v, ns_v, nc_v, spacing_s_v, spacing_c_v, mirror_v=SetUpTail(xopt, lh, lv)
 
     Sref, ref = ReferenceCalculation(num_sec, yle, span, Vinf, chord_opt)
 
@@ -51,32 +52,33 @@ function OptimizeChord(num_sec, scale_factor, xstart)
     println("Optimized chord values: ", chord_opt)
     println("Optimized flight speed:  ", Vinf)
     println("Optimized tail distance:  ", dt)
-
+    println("Optimized Horizontal tail size = ", lh)
+    println("Optimized Vertical tail size = ", lv)
     # Plot the chords
     plot_chords(xle, yle, chord_opt, num_sec)
     savefig("Chord Plot")
     return xopt
 end
 
-N=4
+N=10
 if @isdefined(xstart)
-    if length(xstart) == N+3
+    if length(xstart) == N+5
     I=xstart
     xstart=OptimizeChord(N, 1, I)
-    elseif length(xstart) > N+3
-        I=zeros(N+3)
-        for i in 1:N+3
+    elseif length(xstart) > N+5
+        I=ones(N+5)
+        for i in 1:N+5
         I[i]=xstart[i]
         end
         xstart=OptimizeChord(N, 1, I)
     else
-        I=zeros(N+3)
+        I=ones(N+5)
         for i in 1:length(xstart)
         I[i]=xstart[i]
         end
         xstart=OptimizeChord(N, 1, I)
     end
 else
-    I=zeros(N+3)
+    I=ones(N+5)
     xstart=OptimizeChord(N, 1, I)
 end

@@ -154,7 +154,7 @@
 
         chords, span, rho, Vinf, weight, yle, zle, theta, phi, fc, xle, ns, nc, spacing_s, spacing_c = ProblemSetup(num_sec, scale_factor, c)
 
-        xle_h, yle_h, zle_h, chord_h, theta_h, phi_h, fc_h, ns_h, nc_h, spacing_s_h, spacing_c_h, mirror_h, xle_v, yle_v, zle_v, chord_v, theta_v, phi_v, fc_v, ns_v, nc_v, spacing_s_v, spacing_c_v, mirror_v=SetUpTail()
+        xle_h, yle_h, zle_h, chord_h, theta_h, phi_h, fc_h, ns_h, nc_h, spacing_s_h, spacing_c_h, mirror_h, xle_v, yle_v, zle_v, chord_v, theta_v, phi_v, fc_v, ns_v, nc_v, spacing_s_v, spacing_c_v, mirror_v=SetUpTail(c)
 
         # xle = XLEcalc(xle, chords, num_sec)
 
@@ -204,16 +204,21 @@
 return xopt, fopt, info
 end
 
-function SetUpTail()
+function SetUpTail(c)
 
+    T = eltype(c)
     # horizontal stabilizer
-    xle_h = [0.0, 0.14]
-    yle_h = [0.0, 1.25]
-    zle_h = [0.1, 0.1]
-    chord_h = [0.7, 0.42]
-    theta_h = [0.0, 0.0]
-    phi_h = [0.0, 0.0]
+    xle_h = Array{T}([0.0, 0.14])
+    yle_h = Array{T}([0.0, 1.25])
+    zle_h = Array{T}([0.1, 0.1])
+    chord_h = Array{T}([0.7, 0.42])
+    theta_h = Array{T}([0.0, 0.0])
+    phi_h = Array{T}([0.0, 0.0])
     fc_h = fill((xc) -> 0, 2) #camberline function for each section
+    # Specify the type of the array
+    fc_h_typed = Array{Function}(undef, 2)
+    # Fill the typed array with the same function
+    fc_h_typed .= fill((xc) -> 0, 2)
     ns_h = 6
     nc_h = 3
     spacing_s_h = Uniform()
@@ -221,20 +226,24 @@ function SetUpTail()
     mirror_h = false
 
     # vertical stabilizer
-    xle_v = [0.0, 0.14]
-    yle_v = [0.0, 0.0]
-    zle_v = [0.1, 1.1]
-    chord_v = [0.7, 0.42]
-    theta_v = [0.0, 0.0]
-    phi_v = [0.0, 0.0]
+    xle_v = Array{T}([0.0, 0.14])
+    yle_v = Array{T}([0.0, 0.0])
+    zle_v = Array{T}([0.1, 1.1])
+    chord_v = Array{T}([0.7, 0.42])
+    theta_v = Array{T}([0.0, 0.0])
+    phi_v = Array{T}([0.0, 0.0])
     fc_v = fill((xc) -> 0, 2) #camberline function for each section
+    # Specify the type of the array
+    fc_v_typed = Array{Function}(undef, 2)
+    # Fill the typed array with the same function
+    fc_v_typed .= fill((xc) -> 0, 2)
     ns_v = 5
     nc_v = 3
     spacing_s_v = Uniform()
     spacing_c_v = Uniform()
     mirror_v = false
 
-return xle_h, yle_h, zle_h, chord_h, theta_h, phi_h, fc_h, ns_h, nc_h, spacing_s_h, spacing_c_h, mirror_h, xle_v, yle_v, zle_v, chord_v, theta_v, phi_v, fc_v, ns_v, nc_v, spacing_s_v, spacing_c_v, mirror_v
+return xle_h, yle_h, zle_h, chord_h, theta_h, phi_h, fc_h_typed, ns_h, nc_h, spacing_s_h, spacing_c_h, mirror_h, xle_v, yle_v, zle_v, chord_v, theta_v, phi_v, fc_v_typed, ns_v, nc_v, spacing_s_v, spacing_c_v, mirror_v
 end
 
 

@@ -1,13 +1,12 @@
 using LinearAlgebra
     
 #Setting up all the problem variables
-function ProblemSetup(num_sec, scale_factor, c)
+function ProblemSetup(num_sec, density, c)
 T = eltype(c)
     # Define inputs of function
  span = 8.0 #one wing or the whole span       
  rho = 1.225
  Vinf = 5*c[num_sec+2]
- weight = 1.7*scale_factor
 
 chords = zeros(num_sec+1)
 
@@ -15,7 +14,16 @@ for i in 1:num_sec+1
 chords[i] = c[i]
 end
 
+# Calculate the average
+average_chord = mean(chords)
+
 dt=5*c[num_sec+3]
+lh=c[num_sec+4]
+lv=c[num_sec+5]
+
+weight=1.7*density
+# weight = ((average_chord*span+lh*lh/4+lv*lv/4)*.333333+dt*pi*.225)*density
+
 
  yle=zeros(T, num_sec+1)
  # geometry (right half of the wing)
@@ -36,7 +44,7 @@ end
  spacing_s = Uniform()
  spacing_c = Uniform()
 
-return dt, chords, span, rho, Vinf, weight, yle, zle, theta, phi, fc, xle, ns, nc, spacing_s, spacing_c
+return lh, lv, dt, chords, span, rho, Vinf, weight, yle, zle, theta, phi, fc, xle, ns, nc, spacing_s, spacing_c
 end
 
 #Find the leading edge values assuming zero sweep
@@ -115,10 +123,10 @@ function OptimizationSetup(num_sec, xstart)
  #     end
  # end
 
- lc = fill(0.01, num_sec+3)  # lower bounds on x
- uc = fill(5.0, num_sec+3)  # upper bounds on x
- ng = 10 + 2*num_sec  # number of constraints
- lg = -Inf*one(ng)  # lower bounds on g
+ lc = fill(0.01, num_sec+5)  # lower bounds on x
+ uc = fill(5.0, num_sec+5)  # upper bounds on x
+ ng = 4 + 2*num_sec  # number of constraints
+ lg = -Inf*ones(ng)  # lower bounds on g
  ug = zeros(ng)  # upper bounds on g
  g = zeros(ng)
 
@@ -147,16 +155,16 @@ function plot_chords(xle_opt, yle, chords, num_sec)
  title!("Chords at Each Section")
 end
 
-function RunOptimizer(num_sec, scale_factor, xstart)
+function RunOptimizer(num_sec, density, xstart)
 
 c0, ng, lc, uc, lg, ug, options, g = OptimizationSetup(num_sec, xstart)
 
 #Creating the optimization problem
 function wing_optimizer(g, c)
 
-    dt, chords, span, rho, Vinf, weight, yle, zle, theta, phi, fc, xle, ns, nc, spacing_s, spacing_c = ProblemSetup(num_sec, scale_factor, c)
+    lh, lv, dt, chords, span, rho, Vinf, weight, yle, zle, theta, phi, fc, xle, ns, nc, spacing_s, spacing_c = ProblemSetup(num_sec, density, c)
 
-    xle_h, yle_h, zle_h, chord_h, theta_h, phi_h, fc_h, ns_h, nc_h, spacing_s_h, spacing_c_h, mirror_h, xle_v, yle_v, zle_v, chord_v, theta_v, phi_v, fc_v, ns_v, nc_v, spacing_s_v, spacing_c_v, mirror_v=SetUpTail()
+    xle_h, yle_h, zle_h, chord_h, theta_h, phi_h, fc_h, ns_h, nc_h, spacing_s_h, spacing_c_h, mirror_h, xle_v, yle_v, zle_v, chord_v, theta_v, phi_v, fc_v, ns_v, nc_v, spacing_s_v, spacing_c_v, mirror_v=SetUpTail(c, lh, lv)
 
     # xle = XLEcalc(xle, chords, num_sec)
 
@@ -190,27 +198,31 @@ function wing_optimizer(g, c)
     D=.5*rho*Vinf^2*Sref*CD
     L = .5*rho*Vinf^2*Sref*CL
 
-    g[1]=weight-L
-    g[2]=c[1]-c[2]-.02
-    g[3]= -Cla
-    g[4]= Cma
-    g[5]= Cmq
-    g[6]= CYb
-    g[7]= CLb
-    g[8]= -Cnb
-    g[9]= CLp
-    g[10]= Cnr
+    g[1]= weight - L
+    g[2]= c[1] - c[2] - 0.02
+    g[3]= Cma-0.1
+    # g[4]= Cmq-0.1
+    g[4]= -CYb
+    # g[6]= Cnr-0.1
+    # g[3]= -Cla
+    # g[4]= Cma
+    # g[5]= Cmq
+    # g[6]= -CYb
+    # g[7]= CLb
+    # g[8]= -Cnb
+    # g[9]= CLp
+    # g[10]= Cnr
 
 # CLa +, CMa -, CMq -, CYb -, CLb -, CNb +, CLp -, CNr -
 
     # Calculate chord differences
     for i in 1:num_sec
-        g[i+10] = c[i+1] - c[i]
+        g[i+4] = c[i+1] - c[i]
     end
 
         # Calculate chord differences
     for i in 1:num_sec
-        g[i+num_sec+10] = c[i] - c[i+1]-.5
+        g[i+num_sec+4] = c[i] - c[i+1]-.5
     end
 
     O=D/(sqrt(abs(L))*Vinf)
@@ -223,37 +235,46 @@ xopt, fopt, info = minimize(wing_optimizer, c0, ng, lc, uc, lg, ug, options)
 return xopt, fopt, info
 end
 
-function SetUpTail()
+function SetUpTail(c, lh, lv)
 
-# horizontal stabilizer
-xle_h = [0.0, 0.14]
-yle_h = [0.0, 1.25]
-zle_h = [0.1, 0.1]
-chord_h = [0.7, 0.42]
-theta_h = [0.0, 0.0]
-phi_h = [0.0, 0.0]
-fc_h = fill((xc) -> 0, 2) #camberline function for each section
-ns_h = 6
-nc_h = 3
-spacing_s_h = Uniform()
-spacing_c_h = Uniform()
-mirror_h = false
+    T = eltype(c)
+    # horizontal stabilizer
+    xle_h = Array{T}([0.0, lh/4])
+    yle_h = Array{T}([0.0, lh])
+    zle_h = Array{T}([0.1, 0.1])
+    chord_h = Array{T}([0.7, 0.42])
+    theta_h = Array{T}([0.0, 0.0])
+    phi_h = Array{T}([0.0, 0.0])
+    fc_h = fill((xc) -> 0, 2) #camberline function for each section
+    # Specify the type of the array
+    fc_h_typed = Array{Function}(undef, 2)
+    # Fill the typed array with the same function
+    fc_h_typed .= fill((xc) -> 0, 2)
+    ns_h = 6
+    nc_h = 3
+    spacing_s_h = Uniform()
+    spacing_c_h = Uniform()
+    mirror_h = false
 
-# vertical stabilizer
-xle_v = [0.0, 0.14]
-yle_v = [0.0, 0.0]
-zle_v = [0.1, 1.1]
-chord_v = [0.7, 0.42]
-theta_v = [0.0, 0.0]
-phi_v = [0.0, 0.0]
-fc_v = fill((xc) -> 0, 2) #camberline function for each section
-ns_v = 5
-nc_v = 3
-spacing_s_v = Uniform()
-spacing_c_v = Uniform()
-mirror_v = false
+    # vertical stabilizer
+    xle_v = Array{T}([0.0, lv/4])
+    yle_v = Array{T}([0.0, 0.0])
+    zle_v = Array{T}([0.1, lv])
+    chord_v = Array{T}([0.7, 0.42])
+    theta_v = Array{T}([0.0, 0.0])
+    phi_v = Array{T}([0.0, 0.0])
+    fc_v = fill((xc) -> 0, 2) #camberline function for each section
+    # Specify the type of the array
+    fc_v_typed = Array{Function}(undef, 2)
+    # Fill the typed array with the same function
+    fc_v_typed .= fill((xc) -> 0, 2)
+    ns_v = 5
+    nc_v = 3
+    spacing_s_v = Uniform()
+    spacing_c_v = Uniform()
+    mirror_v = false
 
-return xle_h, yle_h, zle_h, chord_h, theta_h, phi_h, fc_h, ns_h, nc_h, spacing_s_h, spacing_c_h, mirror_h, xle_v, yle_v, zle_v, chord_v, theta_v, phi_v, fc_v, ns_v, nc_v, spacing_s_v, spacing_c_v, mirror_v
+return xle_h, yle_h, zle_h, chord_h, theta_h, phi_h, fc_h_typed, ns_h, nc_h, spacing_s_h, spacing_c_h, mirror_h, xle_v, yle_v, zle_v, chord_v, theta_v, phi_v, fc_v_typed, ns_v, nc_v, spacing_s_v, spacing_c_v, mirror_v
 end
 
 function GetStabilityDerivatives(surface, htail, vtail, ref, fs, symmetric)
@@ -279,3 +300,5 @@ CDr, CYr, CLr = dCF.r
 Clr, Cmr, Cnr = dCM.r
 return Cla, Cma, Cmq, CYb, CLb, Cnb, CLp, Cnr
 end
+
+# Put a constraint 
