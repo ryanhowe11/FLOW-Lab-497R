@@ -125,15 +125,15 @@ function OptimizationSetup(num_sec, xstart)
 
  lc = fill(0.01, num_sec+5)  # lower bounds on x
  uc = fill(5.0, num_sec+5)  # upper bounds on x
- ng = 4 + 2*num_sec  # number of constraints
+ ng = 4 + 3*num_sec  # number of constraints
  lg = -Inf*ones(ng)  # lower bounds on g
  ug = zeros(ng)  # upper bounds on g
  g = zeros(ng)
 
  # ----- set some options ------
  ip_options = Dict(
-     "max_iter" => 500,
-     "tol" => 1e-3
+     "max_iter" => 1250,
+     "tol" => 1e-10
  )
  solver = IPOPT(ip_options)
  options = Options(;solver, derivatives=ForwardFD())
@@ -223,7 +223,12 @@ function wing_optimizer(g, c)
 
         # Calculate chord differences
     for i in 1:num_sec
-        g[i+num_sec+4] = c[i] - c[i+1]-.5
+        g[i+num_sec+4] = 0.75 * c[i] - c[i+1]
+    end
+
+    # Calculate chord differences
+    for i in 1:num_sec
+        g[i+2*num_sec+4] = c[i] - c[i+1]-.5
     end
 
     O=D/(sqrt(abs(L))*Vinf)

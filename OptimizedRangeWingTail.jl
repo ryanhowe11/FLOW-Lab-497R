@@ -59,29 +59,60 @@ function OptimizeChord(num_sec, density, xstart)
     # Plot the chords
     plot_chords(xle, yle, chord_opt, num_sec)
     savefig("Chord Plot")
-    return xopt
+    return xopt, fopt
 end
 
 density=50
 N=10
-if @isdefined(xstart)
-    if length(xstart) == N+5
-    xstart_vec=xstart
-    xstart=OptimizeChord(N, density, xstart_vec)
-    elseif length(xstart) > N+5
-        xstart_vec=ones(N+5)
-        for i in 1:N+5
-        xstart_vec[i]=xstart[i]
-        end
-        xstart=OptimizeChord(N, density, xstart_vec)
-    else
-        xstart_vec=ones(N+5)
-        for i in 1:length(xstart)
-            xstart_vec[i]=xstart[i]
-        end
-        xstart=OptimizeChord(N, density, xstart_vec)
-    end
-else
-    xstart_vec=ones(N+5)
-    xstart=OptimizeChord(N, density, xstart_vec)
-end
+
+# if @isdefined(xstart)
+#     if length(xstart) == N+5
+#     xstart_vec=xstart
+#     xstart=OptimizeChord(N, density, xstart_vec)
+#     elseif length(xstart) > N+5
+#         xstart_vec=ones(N+5)
+#         for i in 1:N+5
+#         xstart_vec[i]=xstart[i]
+#         end
+#         xstart=OptimizeChord(N, density, xstart_vec)
+#     else
+#         xstart_vec=ones(N+5)
+#         for i in 1:length(xstart)
+#             xstart_vec[i]=xstart[i]
+#         end
+#         xstart=OptimizeChord(N, density, xstart_vec)
+#     end
+#     else
+#     xstart_vec=ones(N+5)
+#     xstart=OptimizeChord(N, density, xstart_vec)
+# end
+
+xstart_vec = 0.2*ones(N+5)
+x1, f1 = OptimizeChord(N, density, xstart_vec)
+
+xstart_vec = ones(N+5)
+x2, f2 = OptimizeChord(N, density, xstart_vec)
+
+xstart_vec = 5*ones(N+5)
+x3, f3 = OptimizeChord(N, density, xstart_vec)
+
+xstart_vec = [.1, .2, .3, .4, .5, .6, .7, .8, .9, 1, 2, 2, 2, 2, 2]
+x4, f4 = OptimizeChord(N, density, xstart_vec)
+
+xstart_vec = [2.1, 1.9, 1.7, 1.5, 1.3, 1.1, .9, .7, .5, .3, 2, 2, 2, 2, 2]
+x5, f5 = OptimizeChord(N, density, xstart_vec)
+
+xstart_vec = [2.1, 2.9, 1.7, 3.5, .3, 4.1, 2.9, 1.7, 3.5, 4.73, 2, 2, 2, 2, 2]
+x6, f6 = OptimizeChord(N, density, xstart_vec)
+
+xstart_vec = [.1, .2, .3, .4, .5, .6, .7, .8, .9, 1, 1, 2, 3, 4, 5]
+x7, f7 = OptimizeChord(N, density, xstart_vec)
+
+xstart_vec = [2.1, 1.9, 1.7, 1.5, 1.3, 1.1, .9, .7, .5, .3, 5, 4, 3, 2, 1]
+x8, f8 = OptimizeChord(N, density, xstart_vec)
+
+xstart_vec = [2.1, 2.9, 1.7, 3.5, .3, 4.1, 2.9, 1.7, 3.5, 4.73, 3, 2, 4, 1, 5]
+x9, f9 = OptimizeChord(N, density, xstart_vec)
+
+xstart_vec = [1.1, 3.9, .07, 4.56, .03, 4.91, 3.9, 2.1, .5, 4.73, .1, 4.8, 2.5, 1, 5]
+x10, f10 = OptimizeChord(N, density, xstart_vec)
