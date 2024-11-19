@@ -96,9 +96,13 @@ N=10
 # x2, f2, p2 = OptimizeChordTwist(N, density, xstart_vec)
 # # savefig(p2, "chords_plot_2.png")
 
-xstart_vec = 5*ones(2*N+7)
-x3, f3, p3 = OptimizeChordTwist(N, density, xstart_vec)
-savefig(p3, "chords_plot_3.png")
+# xstart_vec = 5*ones(2*N+7)
+# x3, f3, p3 = OptimizeChordTwist(N, density, xstart_vec)
+# savefig(p3, "chords_plot_3.png")
+
+xstart_vec = x01
+x01, f0, p0 = OptimizeChordTwist(N, density, xstart_vec)
+savefig(p, "chords_plot_0.png")
 
 # xstart_vec = [.1, .2, .3, .4, .5, .6, .7, .8, .9, 1, .1, .2, .3, .4, .5, .6, .7, .8, .9, 1, 1.1, 2, 2, 2, 2, 2]
 # x4, f4, p4 = OptimizeChordTwist(N, density, xstart_vec)
