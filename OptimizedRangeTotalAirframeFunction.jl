@@ -6,7 +6,7 @@ T = eltype(c)
     # Define inputs of function
  span = 8.0 #one wing or the whole span       
  rho = 1.225
- Vinf = 2*c[num_sec+2]
+ Vinf = 2*c[2*num_sec+3]
 
 chords = zeros(T, num_sec+1)
 phi = zeros(T, num_sec+1)
@@ -15,16 +15,16 @@ for i in 1:num_sec+1
 chords[i] = c[i]
 end
 
-# for i in 1:num_sec+1
-#     phi[i] = c[i+num_sec+1]*pi/180
-# end
+for i in 1:num_sec+1
+    phi[i] = c[i+num_sec+1]*pi/180
+end
 
 # Calculate the average
 average_chord = mean(chords)
 
-dt=c[num_sec+3]
-lh=c[num_sec+4]
-lv=c[num_sec+5]
+dt=c[2*num_sec+4]
+lh=c[2*num_sec+5]
+lv=c[2*num_sec+6]
 
 weight=1.7*density
 # weight = ((average_chord*span+lh*lh/4+lv*lv/4)*.333333+dt*pi*.225)*density
@@ -35,7 +35,7 @@ weight=1.7*density
  yle = [i * (span / (num_sec)) for i in 0:(num_sec)]
  zle = zeros(T, num_sec+1)
 #  theta = zeros(T, num_sec+1)
- theta = fill(c[num_sec+6]*pi/180, num_sec+1) |> x -> convert(Vector{T}, x)
+ theta = fill(c[2*num_sec+7]*pi/180, num_sec+1) |> x -> convert(Vector{T}, x)
 #  phi = zeros(T, num_sec+1)
  fc = zeros(T, num_sec+1)
  xle = zeros(T, num_sec+1)
@@ -129,9 +129,9 @@ function OptimizationSetup(num_sec, xstart)
  #     end
  # end
 
- lc = fill(0.01, num_sec+6)  # lower bounds on x
- uc = fill(5.0, num_sec+6)  # upper bounds on x
- ng = 4 + 3*num_sec  # number of constraints
+ lc = fill(0.01, 2*num_sec+7)  # lower bounds on x
+ uc = fill(5.0, 2*num_sec+7)  # upper bounds on x
+ ng = 4 + 4*num_sec  # number of constraints
  lg = -Inf*ones(ng)  # lower bounds on g
  ug = zeros(ng)  # upper bounds on g
  g = zeros(ng)
@@ -139,7 +139,7 @@ function OptimizationSetup(num_sec, xstart)
  # ----- set some options ------
  ip_options = Dict(
      "max_iter" => 1250,
-     "tol" => 1e-5
+     "tol" => 1e-6
  )
  solver = IPOPT(ip_options)
  options = Options(;solver, derivatives=ForwardFD())
@@ -218,7 +218,7 @@ function wing_optimizer(g, c)
 
     g[1]= weight - L
     g[2]= c[1] - c[2] - 0.02
-    g[3]= Cma-0.1
+    g[3]= 0.1+Cma
     # g[4]= Cmq-0.1
     g[4]= -CYb
     # g[6]= Cnr-0.1
@@ -246,6 +246,11 @@ function wing_optimizer(g, c)
     # Calculate chord differences
     for i in 1:num_sec
         g[i+2*num_sec+4] = c[i] - c[i+1]-.5
+    end
+
+    # Calculate chord differences
+    for i in num_sec+1:2*num_sec
+        g[i+2*num_sec+4] = c[i+2] - c[i+1]
     end
 
     O=D/(sqrt(abs(L))*Vinf)
