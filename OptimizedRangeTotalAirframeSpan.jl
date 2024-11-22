@@ -6,7 +6,7 @@ using ForwardDiff
 using Plots
 using Statistics
 using LinearAlgebra
-include("OptimizedRangeTotalAirframeFunction.jl")
+include("OptimizedRangeTotalAirframeSpanFunction.jl")
 
 function OptimizeChordTwist(num_sec, density, xstart)
 
