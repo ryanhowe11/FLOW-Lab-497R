@@ -2,53 +2,53 @@ using LinearAlgebra
     
 #Setting up all the problem variables
 function ProblemSetup(num_sec, density, c)
-T = eltype(c)
-    # Define inputs of function
- span = 8.0 #one wing or the whole span       
- rho = 1.225
- Vinf = 2*c[2*num_sec+3]
+    T = eltype(c)
+        # Define inputs of function
+    span = 8.0 #one wing or the whole span       
+    rho = 1.225
+    Vinf = 2*c[2*num_sec+3]
 
-chords = zeros(T, num_sec+1)
-phi = zeros(T, num_sec+1)
+    chords = zeros(T, num_sec+1)
+    theta = zeros(T, num_sec+1)
 
-for i in 1:num_sec+1
-chords[i] = c[i]
-end
+    for i in 1:num_sec+1
+    chords[i] = c[i]
+    end
 
-for i in 1:num_sec+1
-    phi[i] = c[i+num_sec+1]*pi/180
-end
+    for i in 1:num_sec+1
+        theta[i] = c[i+num_sec+1]*pi/180
+    end
 
-# Calculate the average
-average_chord = mean(chords)
+    # Calculate the average
+    average_chord = mean(chords)
 
-dt=c[2*num_sec+4]
-lh=c[2*num_sec+5]
-lv=c[2*num_sec+6]
+    dt=c[2*num_sec+4]
+    lh=c[2*num_sec+5]
+    lv=c[2*num_sec+6]
 
-weight=1.7*density
-# weight = ((average_chord*span+lh*lh/4+lv*lv/4)*.333333+dt*pi*.225)*density
+    weight=1.7*density
+    # weight = ((average_chord*span+lh*lh/4+lv*lv/4)*.333333+dt*pi*.225)*density
 
 
- yle=zeros(T, num_sec+1)
- # geometry (right half of the wing)
- yle = [i * (span / (num_sec)) for i in 0:(num_sec)]
- zle = zeros(T, num_sec+1)
-#  theta = zeros(T, num_sec+1)
- theta = fill(c[2*num_sec+7]*pi/180, num_sec+1) |> x -> convert(Vector{T}, x)
-#  phi = zeros(T, num_sec+1)
- fc = zeros(T, num_sec+1)
- xle = zeros(T, num_sec+1)
+    yle=zeros(T, num_sec+1)
+    # geometry (right half of the wing)
+    yle = [i * (span / (num_sec)) for i in 0:(num_sec)]
+    zle = zeros(T, num_sec+1)
+    #  theta = zeros(T, num_sec+1)
+    phi = fill(c[2*num_sec+7]*pi/180, num_sec+1) |> x -> convert(Vector{T}, x)
+    #  phi = zeros(T, num_sec+1)
+    fc = zeros(T, num_sec+1)
+    xle = zeros(T, num_sec+1)
 
- for i in 1:num_sec
-    xle[i+1] = (chords[1]/4 - chords[i+1]/4)
-end
+    for i in 1:num_sec
+        xle[i+1] = (chords[1]/4 - chords[i+1]/4)
+    end
 
-     # discretization parameters
- ns = num_sec
- nc = num_sec
- spacing_s = Uniform()
- spacing_c = Uniform()
+        # discretization parameters
+    ns = num_sec
+    nc = num_sec
+    spacing_s = Uniform()
+    spacing_c = Uniform()
 
 return lh, lv, dt, chords, span, rho, Vinf, weight, yle, zle, theta, phi, fc, xle, ns, nc, spacing_s, spacing_c
 end
@@ -139,7 +139,7 @@ function OptimizationSetup(num_sec, xstart)
  # ----- set some options ------
  ip_options = Dict(
      "max_iter" => 1250,
-     "tol" => 1e-6
+     "tol" => 1e-2
  )
  solver = IPOPT(ip_options)
  options = Options(;solver, derivatives=ForwardFD())

@@ -88,21 +88,21 @@ N=10
 # end
 
 # #Multi Start
-# xstart_vec = 0.2*ones(2*N+6)
+# xstart_vec = 0.2*ones(2*N+7)
 # x1, f1, p1 = OptimizeChordTwist(N, density, xstart_vec)
 # savefig(p1, "OTA_chords_plot_1.png")
 
-# xstart_vec = ones(2*N+6)
+# xstart_vec = ones(2*N+7)
 # x2, f2, p2 = OptimizeChordTwist(N, density, xstart_vec)
 # # savefig(p2, "OTA_chords_plot_2.png")
 
-# xstart_vec = 5*ones(2*N+7)
-# x3, f3, p3 = OptimizeChordTwist(N, density, xstart_vec)
-# savefig(p3, "OTA_chords_plot_3.png")
+xstart_vec = 5*ones(2*N+7)
+x3, f3, p3 = OptimizeChordTwist(N, density, xstart_vec)
+savefig(p3, "OTA_chords_plot_3.png")
 
-xstart_vec = X_OTA
-x01, f0, p0 = OptimizeChordTwist(N, density, xstart_vec)
-savefig(p0, "OTA0_chords_plot_0.png")
+# xstart_vec = X_OTA
+# x01, f0, p0 = OptimizeChordTwist(N, density, xstart_vec)
+# savefig(p0, "OTA0_chords_plot_0.png")
 
 # xstart_vec = [.1, .2, .3, .4, .5, .6, .7, .8, .9, 1, .1, .2, .3, .4, .5, .6, .7, .8, .9, 1, 1.1, 2, 2, 2, 2, 2]
 # x4, f4, p4 = OptimizeChordTwist(N, density, xstart_vec)

@@ -8,11 +8,11 @@ T = eltype(c)
  rho = 1.225
  Vinf = 2*c[num_sec+2]
 
-chords = zeros(T, num_sec+1)
-phi = zeros(T, num_sec+1)
+chords = ones(T, num_sec+1)
+theta = zeros(T, num_sec+1)
 
 for i in 1:num_sec+1
-chords[i] = c[i]
+theta[i] = c[i]
 end
 
 # for i in 1:num_sec+1
@@ -35,7 +35,7 @@ weight=1.7*density
  yle = [i * (span / (num_sec)) for i in 0:(num_sec)]
  zle = zeros(T, num_sec+1)
 #  theta = zeros(T, num_sec+1)
- theta = fill(c[num_sec+6]*pi/180, num_sec+1) |> x -> convert(Vector{T}, x)
+ phi = fill(c[num_sec+6]*pi/180, num_sec+1) |> x -> convert(Vector{T}, x)
 #  phi = zeros(T, num_sec+1)
  fc = zeros(T, num_sec+1)
  xle = zeros(T, num_sec+1)
@@ -139,7 +139,7 @@ function OptimizationSetup(num_sec, xstart)
  # ----- set some options ------
  ip_options = Dict(
      "max_iter" => 1250,
-     "tol" => 1e-5
+     "tol" => 1e-6
  )
  solver = IPOPT(ip_options)
  options = Options(;solver, derivatives=ForwardFD())

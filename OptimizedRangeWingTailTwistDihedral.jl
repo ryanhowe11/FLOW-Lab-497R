@@ -87,47 +87,94 @@ N=10
 #     xstart=OptimizeChord(N, density, xstart_vec)
 # end
 
+# #Multi Start
+# xstart_vec = 0.2*ones(N+6)
+# x1, f1, p1 = OptimizeChordTwist(N, density, xstart_vec)
+# savefig(p1, "chords_plot_1_Final.png")
+
+# xstart_vec = ones(N+6)
+# x2, f2, p2 = OptimizeChordTwist(N, density, xstart_vec)
+# savefig(p2, "chords_plot_2_Final.png")
+
+# xstart_vec = 5*ones(N+6)
+# x3, f3, p3 = OptimizeChordTwist(N, density, xstart_vec)
+# savefig(p3, "chords_plot_3_Final.png")
+
+# # xstart_vec = xfinal2
+# # x01, f0, p0 = OptimizeChordTwist(N, density, xstart_vec)
+# # savefig(p, "chords_plot_0.png")
+
+# xstart_vec = [.1, .2, .3, .4, .5, .6, .7, .8, .9, 1, 1, 1.1, 2, 2, 2, 2]
+# x4, f4, p4 = OptimizeChordTwist(N, density, xstart_vec)
+# savefig(p4, "chords_plot_4_Final.png")
+
+# xstart_vec = [2.1, 1.9, 1.7, 1.5, 1.3, 1.1, .9, .7, .5, .3, .1, 2.1, 2, 2, 2, 2]
+# x5, f5, p5 = OptimizeChordTwist(N, density, xstart_vec)
+# savefig(p5, "chords_plot_5_Final.png")
+
+# xstart_vec = [2.1, 2.9, 1.7, 3.5, .3, 4.1, 2.9, 1.7, 3.5, 4.73, .1, 2.1, 2, 2, 2, 2]
+# x6, f6, p6 = OptimizeChordTwist(N, density, xstart_vec)
+# savefig(p6, "chords_plot_6_Final.png")
+
+# xstart_vec = [.1, .2, .3, .4, .5, .6, .7, .8, .9, 1, 1.1, .6, 2, 3, 4, 5]
+# x7, f7, p7 = OptimizeChordTwist(N, density, xstart_vec)
+# savefig(p7, "chords_plot_7_Final.png")
+
+# xstart_vec = [2.1, 1.9, 1.7, 1.5, 1.3, 1.1, .9, .7, .5, .3, .1, 2.1, 5, 4, 3, 2]
+# x8, f8, p8 = OptimizeChordTwist(N, density, xstart_vec)
+# savefig(p8, "chords_plot_8_Final.png")
+
+# xstart_vec = [2.1, 2.9, 1.7, 3.5, .3, 4.1, 2.9, 1.7, 3.5, 4.73, .1, 2.1, 2, 4, 1, 5]
+# x9, f9, p9 = OptimizeChordTwist(N, density, xstart_vec)
+# savefig(p9, "chords_plot_9_Final.png")
+
+# xstart_vec = [1.1, 3.9, .07, 4.56, .03, 4.91, 3.9, 2.1, .5, 4.73, 1.1, 3.9, 4.8, 2.5, 1, 5]
+# x10, f10, p10 = OptimizeChordTwist(N, density, xstart_vec)
+# savefig(p10, "chords_plot_10_Final.png")
+
+#Multi Start Phase 2
+
 #Multi Start
-xstart_vec = 0.2*ones(N+6)
+xstart_vec = x1
 x1, f1, p1 = OptimizeChordTwist(N, density, xstart_vec)
-savefig(p1, "chords_plot_1.png")
+savefig(p1, "chords_plot_1_Final_Iteration.png")
 
-xstart_vec = ones(N+6)
+xstart_vec = x2
 x2, f2, p2 = OptimizeChordTwist(N, density, xstart_vec)
-# savefig(p2, "chords_plot_2.png")
+savefig(p2, "chords_plot_2_Final_Iteration.png")
 
-xstart_vec = 5*ones(N+6)
+xstart_vec = x3
 x3, f3, p3 = OptimizeChordTwist(N, density, xstart_vec)
-savefig(p3, "chords_plot_3.png")
+savefig(p3, "chords_plot_3_Final_Iteration.png")
 
 # xstart_vec = xfinal2
 # x01, f0, p0 = OptimizeChordTwist(N, density, xstart_vec)
 # savefig(p, "chords_plot_0.png")
 
-xstart_vec = [.1, .2, .3, .4, .5, .6, .7, .8, .9, 1, 1, 1.1, 2, 2, 2, 2]
+xstart_vec = x4
 x4, f4, p4 = OptimizeChordTwist(N, density, xstart_vec)
-savefig(p4, "chords_plot_4.png")
+savefig(p4, "chords_plot_4_Final_Iteration.png")
 
-xstart_vec = [2.1, 1.9, 1.7, 1.5, 1.3, 1.1, .9, .7, .5, .3, .1, 2.1, 2, 2, 2, 2]
+xstart_vec = x5
 x5, f5, p5 = OptimizeChordTwist(N, density, xstart_vec)
-savefig(p5, "chords_plot_5.png")
+savefig(p5, "chords_plot_5_Final_Iteration.png")
 
-xstart_vec = [2.1, 2.9, 1.7, 3.5, .3, 4.1, 2.9, 1.7, 3.5, 4.73, .1, 2.1, 2, 2, 2, 2]
+xstart_vec = x6
 x6, f6, p6 = OptimizeChordTwist(N, density, xstart_vec)
-savefig(p6, "chords_plot_6.png")
+savefig(p6, "chords_plot_6_Final_Iteration.png")
 
-xstart_vec = [.1, .2, .3, .4, .5, .6, .7, .8, .9, 1, 1.1, .6, 2, 3, 4, 5]
+xstart_vec = x7
 x7, f7, p7 = OptimizeChordTwist(N, density, xstart_vec)
-savefig(p7, "chords_plot_7.png")
+savefig(p7, "chords_plot_7_Final_Iteration.png")
 
-xstart_vec = [2.1, 1.9, 1.7, 1.5, 1.3, 1.1, .9, .7, .5, .3, .1, 2.1, 5, 4, 3, 2]
+xstart_vec = x8
 x8, f8, p8 = OptimizeChordTwist(N, density, xstart_vec)
-savefig(p8, "chords_plot_8.png")
+savefig(p8, "chords_plot_8_Final_Iteration.png")
 
-xstart_vec = [2.1, 2.9, 1.7, 3.5, .3, 4.1, 2.9, 1.7, 3.5, 4.73, .1, 2.1, 2, 4, 1, 5]
+xstart_vec = x9
 x9, f9, p9 = OptimizeChordTwist(N, density, xstart_vec)
-savefig(p9, "chords_plot_9.png")
+savefig(p9, "chords_plot_9_Final_Iteration.png")
 
-xstart_vec = [1.1, 3.9, .07, 4.56, .03, 4.91, 3.9, 2.1, .5, 4.73, 1.1, 3.9, 4.8, 2.5, 1, 5]
+xstart_vec = x10
 x10, f10, p10 = OptimizeChordTwist(N, density, xstart_vec)
-savefig(p10, "chords_plot_10.png")
+savefig(p10, "chords_plot_10_Final_Iteration.png")
