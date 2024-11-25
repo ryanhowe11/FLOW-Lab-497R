@@ -108,7 +108,7 @@ println(CL_Vect)
 println(my_alpha)
 
 # Plotting
-plot(my_alpha, CL_Vect, xlabel="alpha", ylabel="Lift Coefficient", legend=false)
+plot(my_alpha, CL_Vect, xlabel="alpha", ylabel="Lift Coefficient", legend=false, grid=false)
 
 # Save the plot to a PDF file
-savefig("Lift Coefficient vs Angle of Attack.pdf")
+savefig("Lift_Coefficient_vs_Angle_of_Attack.pdf")
