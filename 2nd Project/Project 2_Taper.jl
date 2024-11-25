@@ -1,5 +1,6 @@
 using Plots
 using VortexLattice
+using Trapz
 
 function tapered_wing(root, span, tip, num_sec, filename)
     a = root / 2                # Root length
@@ -75,7 +76,7 @@ Create and section off an eliptic wing based on its root chord, span, and number
 # Define inputs of function
 span = 10       
 root = 3
-tip = 3
+tip = 1
 num_sec = 25
 filename = "tapered_wing_section_plot.pdf"
 x_points, y_points, points, chords, Sref, cref, bref = tapered_wing(root, span, tip, num_sec, filename)
@@ -102,6 +103,7 @@ spacing_c = Uniform()
 rref = [0.50, 0.0, 0.0]
 Vinf = 1.0
 ref = Reference(Sref, cref, bref, rref, Vinf)
+rho = 1.225
 
 # freestream parameters
 alpha_angle = 1.0*pi/180
@@ -188,9 +190,9 @@ y = aprime * sin.(θ)
 #elliptical_distribution = Cl_max * sqrt.(1 .- (y ./ span).^2)
 
 # Plot the lift distribution
-plot!(yle, Lift_prime, label="Calculated Lift Distribution Rectangular", xlabel="Spanwise Location (y)", ylabel="Lift Coefficient (Cl)")
+plot!(yle, Lift_prime, label="Calculated Lift Distribution Taper Ratio 1/3", xlabel="Spanwise Location (y)", ylabel="Lift Coefficient (Cl)")
 #plot!(y, elliptical_distribution, label="Elliptical Lift Distribution", linestyle=:dash)
-plot!(x, y, linestyle=:dash, label="Ideal Elliptic Lift Distribution Rectangular", legend=:bottomleft)
+plot!(x, y, linestyle=:dot, label="Ideal Elliptic Lift Distribution Taper Ratio 1/3", legend=:bottomleft, markersize=4, legendfontsize=14, grid=false)
 
 # Save the lift distribution plot as a PDF
 savefig("Lift_Distribution_along_the_Span_taper_Iteration_2.pdf")
