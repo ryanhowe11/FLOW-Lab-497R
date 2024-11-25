@@ -190,7 +190,7 @@ y = aprime * sin.(θ)
 #elliptical_distribution = Cl_max * sqrt.(1 .- (y ./ span).^2)
 
 # Plot the lift distribution
-plot!(yle, Lift_prime, label="Calculated Lift Distribution Taper Ratio 1/3", xlabel="Spanwise Location (y)", ylabel="Lift Coefficient (Cl)")
+plot(yle, Lift_prime, label="Calculated Lift Distribution Taper Ratio 1/3", xlabel="Spanwise Location (y)", ylabel="Lift Coefficient (Cl)")
 #plot!(y, elliptical_distribution, label="Elliptical Lift Distribution", linestyle=:dash)
 plot!(x, y, linestyle=:dot, label="Ideal Elliptic Lift Distribution Taper Ratio 1/3", legend=:bottomleft, markersize=4, legendfontsize=14, grid=false)
 
