@@ -139,7 +139,7 @@ function OptimizationSetup(num_sec, xstart)
  # ----- set some options ------
  ip_options = Dict(
      "max_iter" => 1250,
-     "tol" => 1e-2
+     "tol" => 1e-5
  )
  solver = IPOPT(ip_options)
  options = Options(;solver, derivatives=ForwardFD())
