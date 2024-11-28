@@ -149,11 +149,12 @@ function plot_chords(xle_opt, yle, chords, num_sec)
      y_start = yle[i]
      x_end = x_start + chords[i]
      y_end = y_start
-     plot!([x_start, x_end], [y_start, y_end], label="Chord $i", legend=false)
+     plot!([x_start, x_end], [y_start, y_end], label="Chord $i", legend=false, grid=false)
  end
  ylabel!("Span")
  xlabel!("Chord")
 #  title!("Chords at Each Section")
+savefig("FinalWingSpanChord.png")
 end
 
 function RunOptimizer(num_sec, density, xstart)

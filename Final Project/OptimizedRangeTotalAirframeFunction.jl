@@ -139,7 +139,7 @@ function OptimizationSetup(num_sec, xstart)
  # ----- set some options ------
  ip_options = Dict(
      "max_iter" => 1250,
-     "tol" => 1e-5
+     "tol" => 1e-6
  )
  solver = IPOPT(ip_options)
  options = Options(;solver, derivatives=ForwardFD())
@@ -154,7 +154,7 @@ function plot_chords(xle_opt, yle, chords, num_sec)
             y_start = yle[i]
             x_end = x_start + chords[i]
             y_end = y_start
-            plot!(plt, [x_start, x_end], [y_start, y_end], label="Chord $i", legend=false)
+            plot!(plt, [x_start, x_end], [y_start, y_end], label="Chord $i", legend=false, grid=false)
         end
         xlabel!(plt, "yle")
         ylabel!(plt, "xle_opt / Chord length")

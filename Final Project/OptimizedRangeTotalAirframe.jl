@@ -157,13 +157,13 @@ N=10
 # x3, f3, p3 = OptimizeChordTwist(N, density, xstart_vec)
 # savefig(p3, "OTA_chords_plot_3.png")
 
-# xstart_vec = x3
-# x3, f3, p3 = OptimizeChordTwist(N, density, xstart_vec)
-# savefig(p3, "OTA_chords_plot_3.png")
+# # xstart_vec = x3
+# # x3, f3, p3 = OptimizeChordTwist(N, density, xstart_vec)
+# # savefig(p3, "OTA_chords_plot_3.png")
 
-# xstart_vec = X_OTA
-# x01, f0, p0 = OptimizeChordTwist(N, density, xstart_vec)
-# savefig(p0, "OTA0_chords_plot_0.png")
+# # xstart_vec = X_OTA
+# # x01, f0, p0 = OptimizeChordTwist(N, density, xstart_vec)
+# # savefig(p0, "OTA0_chords_plot_0.png")
 
 # xstart_vec = [.1, .2, .3, .4, .5, .6, .7, .8, .9, 1, .1, .2, .3, .4, .5, .6, .7, .8, .9, 1, 1.1, 2, 2, 2, 2, 2, 2]
 # x4, f4, p4 = OptimizeChordTwist(N, density, xstart_vec)
@@ -195,47 +195,65 @@ N=10
 
 # xstart_vec = x1
 # x1, f1, p1 = OptimizeChordTwist(N, density, xstart_vec)
-# savefig(p1, "OTA_chords_plot_1.png")
+# savefig(p1, "OTA_chords_plot_1eh.png")
 
 # xstart_vec = x2
 # x2, f2, p2 = OptimizeChordTwist(N, density, xstart_vec)
-# savefig(p2, "OTA_chords_plot_2.png")
+# savefig(p2, "OTA_chords_plot_2eh.png")
 
 # xstart_vec = x4
 # x4, f4, p4 = OptimizeChordTwist(N, density, xstart_vec)
-# savefig(p4, "OTA_chords_plot_4.png")
+# savefig(p4, "OTA_chords_plot_4eh.png")
 
 # xstart_vec = x5
 # x5, f5, p5 = OptimizeChordTwist(N, density, xstart_vec)
-# savefig(p5, "OTA_chords_plot_5.png")
+# savefig(p5, "OTA_chords_plot_5eh.png")
 
 # xstart_vec = x6
 # x6, f6, p6 = OptimizeChordTwist(N, density, xstart_vec)
-# savefig(p6, "OTA_chords_plot_6.png")
+# savefig(p6, "OTA_chords_plot_6eh.png")
 
-x11= [0.0967433550246891, 0.09502397702801295, 0.09411545671781167, 0.09237140606244826, 0.09060007754097422, 0.08505747878363625, 0.0807232299729224, 0.07291305388660012, 0.06398965600707034, 0.05034500025868463, 0.04027200577758331, 4.967909516672052, 4.934975918287751, 4.9081488711992876, 4.879186382488014, 4.846802543173113, 4.809060445992316, 4.762115249993808, 4.698384988774833, 4.599294125952694, 4.398274310761623, 3.0521630570054668, 4.998589978541345, 4.993954366125382, 0.33233809505621703, 0.08811681181122283, 4.963860908346633]
-
-surfaces_opt, properties_opt, symmetric = GetVTKandValues(N, density, x11)
-write_vtk("Plane_11", surfaces_opt, properties_opt; symmetric=symmetric)
-
-# surfaces_opt, properties_opt, symmetric = GetVTKandValues(N, density, x5)
-# write_vtk("Plane_5", surfaces_opt, properties_opt; symmetric=symmetric)
-
-# surfaces_opt, properties_opt, symmetric = GetVTKandValues(N, density, x6)
-# write_vtk("Plane_6", surfaces_opt, properties_opt; symmetric=symmetric)
+# # x11= [0.0967433550246891, 0.09502397702801295, 0.09411545671781167, 0.09237140606244826, 0.09060007754097422, 0.08505747878363625, 0.0807232299729224, 0.07291305388660012, 0.06398965600707034, 0.05034500025868463, 0.04027200577758331, 4.967909516672052, 4.934975918287751, 4.9081488711992876, 4.879186382488014, 4.846802543173113, 4.809060445992316, 4.762115249993808, 4.698384988774833, 4.599294125952694, 4.398274310761623, 3.0521630570054668, 4.998589978541345, 4.993954366125382, 0.33233809505621703, 0.08811681181122283, 4.963860908346633]
 
 # xstart_vec = x7
 # x7, f7, p7 = OptimizeChordTwist(N, density, xstart_vec)
-# savefig(p7, "OTA_chords_plot_7.png")
+# savefig(p7, "OTA_chords_plot_7eh.png")
 
 # xstart_vec = x8
 # x8, f8, p8 = OptimizeChordTwist(N, density, xstart_vec)
-# savefig(p8, "OTA_chords_plot_8.png")
+# savefig(p8, "OTA_chords_plot_8eh.png")
 
 # xstart_vec = x9
 # x9, f9, p9 = OptimizeChordTwist(N, density, xstart_vec)
-# savefig(p9, "OTA_chords_plot_9.png")
+# savefig(p9, "OTA_chords_plot_9eh.png")
 
 # xstart_vec = x10
 # x10, f10, p10 = OptimizeChordTwist(N, density, xstart_vec)
-# savefig(p10, "OTA_chords_plot_10.png")
+# savefig(p10, "OTA_chords_plot_10eh.png")
+
+surfaces_opt, properties_opt, symmetric = GetVTKandValues(N, density, x1)
+write_vtk("Plane_1cs", surfaces_opt, properties_opt; symmetric=symmetric)
+
+# surfaces_opt, properties_opt, symmetric = GetVTKandValues(N, density, x2)
+# write_vtk("Plane_2", surfaces_opt, properties_opt; symmetric=symmetric)
+
+surfaces_opt, properties_opt, symmetric = GetVTKandValues(N, density, x4)
+write_vtk("Plane_4cs", surfaces_opt, properties_opt; symmetric=symmetric)
+
+surfaces_opt, properties_opt, symmetric = GetVTKandValues(N, density, x5)
+write_vtk("Plane_5cs", surfaces_opt, properties_opt; symmetric=symmetric)
+
+surfaces_opt, properties_opt, symmetric = GetVTKandValues(N, density, x6)
+write_vtk("Plane_6cs", surfaces_opt, properties_opt; symmetric=symmetric)
+
+surfaces_opt, properties_opt, symmetric = GetVTKandValues(N, density, x7)
+write_vtk("Plane_7cs", surfaces_opt, properties_opt; symmetric=symmetric)
+
+surfaces_opt, properties_opt, symmetric = GetVTKandValues(N, density, x8)
+write_vtk("Plane_8cs", surfaces_opt, properties_opt; symmetric=symmetric)
+
+surfaces_opt, properties_opt, symmetric = GetVTKandValues(N, density, x9)
+write_vtk("Plane_9cs", surfaces_opt, properties_opt; symmetric=symmetric)
+
+surfaces_opt, properties_opt, symmetric = GetVTKandValues(N, density, x10)
+write_vtk("Plane_10cs", surfaces_opt, properties_opt; symmetric=symmetric)

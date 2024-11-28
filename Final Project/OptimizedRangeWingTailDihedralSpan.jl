@@ -248,6 +248,6 @@ write_vtk("Plane_10s", surfaces_opt, properties_opt; symmetric=symmetric)
 # x9, f9, p9 = OptimizeChord(N, density, xstart_vec)
 # savefig(p9, "OWS_chords_plot_9.png")
 
-# xstart_vec = x10
-# x10, f10, p10 = OptimizeChord(N, density, xstart_vec)
-# savefig(p10, "OWS_chords_plot_10.png")
+xstart_vec = x10
+x10, f10, p10 = OptimizeChord(N, density, xstart_vec)
+savefig(p10, "OWS_chords_plot_10.png")
