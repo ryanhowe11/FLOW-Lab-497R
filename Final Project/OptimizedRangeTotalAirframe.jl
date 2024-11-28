@@ -213,14 +213,16 @@ N=10
 # x6, f6, p6 = OptimizeChordTwist(N, density, xstart_vec)
 # savefig(p6, "OTA_chords_plot_6.png")
 
-surfaces_opt, properties_opt, symmetric = GetVTKandValues(N, density, x4)
-write_vtk("Plane_4", surfaces_opt, properties_opt; symmetric=symmetric)
+x11= [0.0967433550246891, 0.09502397702801295, 0.09411545671781167, 0.09237140606244826, 0.09060007754097422, 0.08505747878363625, 0.0807232299729224, 0.07291305388660012, 0.06398965600707034, 0.05034500025868463, 0.04027200577758331, 4.967909516672052, 4.934975918287751, 4.9081488711992876, 4.879186382488014, 4.846802543173113, 4.809060445992316, 4.762115249993808, 4.698384988774833, 4.599294125952694, 4.398274310761623, 3.0521630570054668, 4.998589978541345, 4.993954366125382, 0.33233809505621703, 0.08811681181122283, 4.963860908346633]
 
-surfaces_opt, properties_opt, symmetric = GetVTKandValues(N, density, x5)
-write_vtk("Plane_5", surfaces_opt, properties_opt; symmetric=symmetric)
+surfaces_opt, properties_opt, symmetric = GetVTKandValues(N, density, x11)
+write_vtk("Plane_11", surfaces_opt, properties_opt; symmetric=symmetric)
 
-surfaces_opt, properties_opt, symmetric = GetVTKandValues(N, density, x6)
-write_vtk("Plane_6", surfaces_opt, properties_opt; symmetric=symmetric)
+# surfaces_opt, properties_opt, symmetric = GetVTKandValues(N, density, x5)
+# write_vtk("Plane_5", surfaces_opt, properties_opt; symmetric=symmetric)
+
+# surfaces_opt, properties_opt, symmetric = GetVTKandValues(N, density, x6)
+# write_vtk("Plane_6", surfaces_opt, properties_opt; symmetric=symmetric)
 
 # xstart_vec = x7
 # x7, f7, p7 = OptimizeChordTwist(N, density, xstart_vec)
