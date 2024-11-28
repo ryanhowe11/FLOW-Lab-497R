@@ -152,8 +152,8 @@ function plot_chords(xle_opt, yle, chords, num_sec)
      y_end = y_start
      plot!([x_start, x_end], [y_start, y_end], label="Chord $i", legend=false)
  end
- ylabel!("yle")
- xlabel!("xle_opt / Chord length")
+ ylabel!("Span")
+ xlabel!("Chord")
 #  title!("Chords at Each Section")
 end
 

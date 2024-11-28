@@ -143,62 +143,62 @@ N=10
 
 xstart_vec = 0.2*ones(N+7)
 x1, f1, p1 = OptimizeTwist(N, density, xstart_vec)
-savefig(p1, "OWS_chords_plot_1.png")
+# savefig(p1, "OWS_chords_plot_1.png")
 
 xstart_vec = ones(N+7)
 x2, f2, p2 = OptimizeTwist(N, density, xstart_vec)
-savefig(p2, "OWS_chords_plot_2.png")
+# savefig(p2, "OWS_chords_plot_2.png")
 
 xstart_vec = 5*ones(N+7)
 x3, f3, p3 = OptimizeTwist(N, density, xstart_vec)
-savefig(p3, "OWS_chords_plot_3.png")
+# savefig(p3, "OWS_chords_plot_3.png")
 
 xstart_vec = [.1, .2, .3, .4, .5, .6, .7, .8, .9, 1, 2, 2, 2, 2, 2, 2, 5]
 x4, f4, p4 = OptimizeTwist(N, density, xstart_vec)
-savefig(p4, "OWS_chords_plot_4.png")
+# savefig(p4, "OWS_chords_plot_4.png")
 
 xstart_vec = [2.1, 1.9, 1.7, 1.5, 1.3, 1.1, .9, .7, .5, .3, 2, 2, 2, 2, 2, 2, 5]
 x5, f5, p5 = OptimizeTwist(N, density, xstart_vec)
-savefig(p5, "OWS_chords_plot_5.png")
+# savefig(p5, "OWS_chords_plot_5.png")
 
 xstart_vec = [2.1, 2.9, 1.7, 3.5, .3, 4.1, 2.9, 1.7, 3.5, 4.73, 2, 2, 2, 2, 2, 2, 5]
 x6, f6, p6 = OptimizeTwist(N, density, xstart_vec)
-savefig(p6, "OWS_chords_plot_6.png")
+# savefig(p6, "OWS_chords_plot_6.png")
 
 xstart_vec = [.1, .2, .3, .4, .5, .6, .7, .8, .9, 1, 1, 2, 3, 4, 5, 6, 7]
 x7, f7, p7 = OptimizeTwist(N, density, xstart_vec)
-savefig(p7, "OWS_chords_plot_7.png")
+# savefig(p7, "OWS_chords_plot_7.png")
 
 xstart_vec = [2.1, 1.9, 1.7, 1.5, 1.3, 1.1, .9, .7, .5, .3, 6, 5, 4, 3, 2, 1, 3]
 x8, f8, p8 = OptimizeTwist(N, density, xstart_vec)
-savefig(p8, "OWS_chords_plot_8.png")
+# savefig(p8, "OWS_chords_plot_8.png")
 
 xstart_vec = [2.1, 2.9, 1.7, 3.5, .3, 4.1, 2.9, 1.7, 3.5, 4.73, 3, 2, 4, 1, 5, 2, 3]
 x9, f9, p9 = OptimizeTwist(N, density, xstart_vec)
-savefig(p9, "OWS_chords_plot_9.png")
+# savefig(p9, "OWS_chords_plot_9.png")
 
 xstart_vec = [1.1, 3.9, .07, 4.56, .03, 4.91, 3.9, 2.1, .5, 4.73, .1, 4.8, 2.5, 6, 1, 5, 7]
 x10, f10, p10 = OptimizeTwist(N, density, xstart_vec)
-savefig(p10, "OWS_chords_plot_10.png")
+# savefig(p10, "OWS_chords_plot_10.png")
 
 # xstart_vec = x1
-# x1, f1, p1 = OptimizeChordTwist(N, density, xstart_vec)
+# x1, f1, p1 = OptimizeTwist(N, density, xstart_vec)
 # savefig(p1, "OWS_chords_plot_1.png")
 
 # xstart_vec = x2
-# x2, f2, p2 = OptimizeChordTwist(N, density, xstart_vec)
+# x2, f2, p2 = OptimizeTwist(N, density, xstart_vec)
 # savefig(p2, "OWS_chords_plot_2.png")
 
 # xstart_vec = x4
-# x4, f4, p4 = OptimizeChordTwist(N, density, xstart_vec)
+# x4, f4, p4 = OptimizeTwist(N, density, xstart_vec)
 # savefig(p4, "OWS_chords_plot_4.png")
 
 # xstart_vec = x5
-# x5, f5, p5 = OptimizeChordTwist(N, density, xstart_vec)
+# x5, f5, p5 = OptimizeTwist(N, density, xstart_vec)
 # savefig(p5, "OWS_chords_plot_5.png")
 
 # xstart_vec = x6
-# x6, f6, p6 = OptimizeChordTwist(N, density, xstart_vec)
+# x6, f6, p6 = OptimizeTwist(N, density, xstart_vec)
 # savefig(p6, "OWS_chords_plot_6.png")
 
 # surfaces_opt, properties_opt, symmetric = GetVTKandValues(N, density, x4)
@@ -211,17 +211,17 @@ savefig(p10, "OWS_chords_plot_10.png")
 # write_vtk("Plane_6", surfaces_opt, properties_opt; symmetric=symmetric)
 
 # xstart_vec = x7
-# x7, f7, p7 = OptimizeChordTwist(N, density, xstart_vec)
+# x7, f7, p7 = OptimizeTwist(N, density, xstart_vec)
 # savefig(p7, "OWS_chords_plot_7.png")
 
 # xstart_vec = x8
-# x8, f8, p8 = OptimizeChordTwist(N, density, xstart_vec)
+# x8, f8, p8 = OptimizeTwist(N, density, xstart_vec)
 # savefig(p8, "OWS_chords_plot_8.png")
 
 # xstart_vec = x9
-# x9, f9, p9 = OptimizeChordTwist(N, density, xstart_vec)
+# x9, f9, p9 = OptimizeTwist(N, density, xstart_vec)
 # savefig(p9, "OWS_chords_plot_9.png")
 
 # xstart_vec = x10
-# x10, f10, p10 = OptimizeChordTwist(N, density, xstart_vec)
+# x10, f10, p10 = OptimizeTwist(N, density, xstart_vec)
 # savefig(p10, "OWS_chords_plot_10.png")

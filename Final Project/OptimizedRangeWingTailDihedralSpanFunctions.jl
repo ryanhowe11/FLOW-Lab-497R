@@ -17,7 +17,7 @@ end
 # Calculate the average
 average_chord = mean(chords)
 
-dt=c[num_sec+3]
+dt=2*c[num_sec+3]
 lh=c[num_sec+4]
 lv=c[num_sec+5]
 
