@@ -81,7 +81,7 @@ end
 function FreestreamParams(Vinf)
 
  # freestream parameters
- alpha_angle = 5.0*pi/180
+ alpha_angle = 10.0*pi/180
  beta = 0.0
  Omega = [0.0; 0.0; 0.0]
  fs = Freestream(Vinf, alpha_angle, beta, Omega)
