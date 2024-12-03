@@ -153,13 +153,13 @@ N=10
 # x2, f2, p2 = OptimizeChordTwist(N, density, xstart_vec)
 # savefig(p2, "OTA_chords_plot_2.png")
 
-# xstart_vec = 5*ones(2*N+7)
+xstart_vec = 5*ones(2*N+7)
+x3, f3, p3 = OptimizeChordTwist(N, density, xstart_vec)
+savefig(p3, "OTA_chords_plot_3.png")
+
+# xstart_vec = x3
 # x3, f3, p3 = OptimizeChordTwist(N, density, xstart_vec)
 # savefig(p3, "OTA_chords_plot_3.png")
-
-# # xstart_vec = x3
-# # x3, f3, p3 = OptimizeChordTwist(N, density, xstart_vec)
-# # savefig(p3, "OTA_chords_plot_3.png")
 
 # # xstart_vec = X_OTA
 # # x01, f0, p0 = OptimizeChordTwist(N, density, xstart_vec)
@@ -231,29 +231,29 @@ N=10
 # x10, f10, p10 = OptimizeChordTwist(N, density, xstart_vec)
 # savefig(p10, "OTA_chords_plot_10eh.png")
 
-surfaces_opt, properties_opt, symmetric = GetVTKandValues(N, density, x1)
-write_vtk("Plane_1cs", surfaces_opt, properties_opt; symmetric=symmetric)
+# surfaces_opt, properties_opt, symmetric = GetVTKandValues(N, density, x1)
+# write_vtk("Plane_1cs", surfaces_opt, properties_opt; symmetric=symmetric)
 
-# surfaces_opt, properties_opt, symmetric = GetVTKandValues(N, density, x2)
-# write_vtk("Plane_2", surfaces_opt, properties_opt; symmetric=symmetric)
+# # surfaces_opt, properties_opt, symmetric = GetVTKandValues(N, density, x2)
+# # write_vtk("Plane_2", surfaces_opt, properties_opt; symmetric=symmetric)
 
-surfaces_opt, properties_opt, symmetric = GetVTKandValues(N, density, x4)
-write_vtk("Plane_4cs", surfaces_opt, properties_opt; symmetric=symmetric)
+# surfaces_opt, properties_opt, symmetric = GetVTKandValues(N, density, x4)
+# write_vtk("Plane_4cs", surfaces_opt, properties_opt; symmetric=symmetric)
 
-surfaces_opt, properties_opt, symmetric = GetVTKandValues(N, density, x5)
-write_vtk("Plane_5cs", surfaces_opt, properties_opt; symmetric=symmetric)
+# surfaces_opt, properties_opt, symmetric = GetVTKandValues(N, density, x5)
+# write_vtk("Plane_5cs", surfaces_opt, properties_opt; symmetric=symmetric)
 
-surfaces_opt, properties_opt, symmetric = GetVTKandValues(N, density, x6)
-write_vtk("Plane_6cs", surfaces_opt, properties_opt; symmetric=symmetric)
+# surfaces_opt, properties_opt, symmetric = GetVTKandValues(N, density, x6)
+# write_vtk("Plane_6cs", surfaces_opt, properties_opt; symmetric=symmetric)
 
-surfaces_opt, properties_opt, symmetric = GetVTKandValues(N, density, x7)
-write_vtk("Plane_7cs", surfaces_opt, properties_opt; symmetric=symmetric)
+# surfaces_opt, properties_opt, symmetric = GetVTKandValues(N, density, x7)
+# write_vtk("Plane_7cs", surfaces_opt, properties_opt; symmetric=symmetric)
 
-surfaces_opt, properties_opt, symmetric = GetVTKandValues(N, density, x8)
-write_vtk("Plane_8cs", surfaces_opt, properties_opt; symmetric=symmetric)
+# surfaces_opt, properties_opt, symmetric = GetVTKandValues(N, density, x8)
+# write_vtk("Plane_8cs", surfaces_opt, properties_opt; symmetric=symmetric)
 
-surfaces_opt, properties_opt, symmetric = GetVTKandValues(N, density, x9)
-write_vtk("Plane_9cs", surfaces_opt, properties_opt; symmetric=symmetric)
+# surfaces_opt, properties_opt, symmetric = GetVTKandValues(N, density, x9)
+# write_vtk("Plane_9cs", surfaces_opt, properties_opt; symmetric=symmetric)
 
-surfaces_opt, properties_opt, symmetric = GetVTKandValues(N, density, x10)
-write_vtk("Plane_10cs", surfaces_opt, properties_opt; symmetric=symmetric)
+# surfaces_opt, properties_opt, symmetric = GetVTKandValues(N, density, x10)
+# write_vtk("Plane_10cs", surfaces_opt, properties_opt; symmetric=symmetric)
