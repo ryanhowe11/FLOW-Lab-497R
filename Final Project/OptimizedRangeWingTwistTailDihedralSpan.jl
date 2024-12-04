@@ -144,6 +144,7 @@ N=10
 xstart_vec = 0.2*ones(N+7)
 x1, f1, p1 = OptimizeTwist(N, density, xstart_vec)
 # savefig(p1, "OWS_chords_plot_1.png")
+#Infeasible
 
 xstart_vec = ones(N+7)
 x2, f2, p2 = OptimizeTwist(N, density, xstart_vec)
@@ -185,8 +186,8 @@ x10, f10, p10 = OptimizeTwist(N, density, xstart_vec)
 # x1, f1, p1 = OptimizeTwist(N, density, xstart_vec)
 # savefig(p1, "OWS_chords_plot_1.png")
 
-# xstart_vec = x2
-# x2, f2, p2 = OptimizeTwist(N, density, xstart_vec)
+xstart_vec = x2
+x2, f2, p2 = OptimizeTwist(N, density, xstart_vec)
 # savefig(p2, "OWS_chords_plot_2.png")
 
 # xstart_vec = x4
