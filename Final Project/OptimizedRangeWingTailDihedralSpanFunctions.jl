@@ -87,7 +87,7 @@ end
 function FreestreamParams(Vinf)
 
  # freestream parameters
- alpha_angle = 10.0*pi/180
+ alpha_angle = 5.0*pi/180
  beta = 0.0
  Omega = [0.0; 0.0; 0.0]
  fs = Freestream(Vinf, alpha_angle, beta, Omega)
@@ -139,7 +139,7 @@ function OptimizationSetup(num_sec, xstart)
  # ----- set some options ------
  ip_options = Dict(
      "max_iter" => 1250,
-     "tol" => 1e-6
+     "tol" => 1e-5
  )
  solver = IPOPT(ip_options)
  options = Options(;solver, derivatives=ForwardAD())
@@ -243,7 +243,12 @@ function wing_optimizer(g, c)
 return O
 end
 
-function GetSpanLiftDistribution2(span, xle, yle, zle, chord_opt, theta, phi, fc, ns, Vinf)
+xopt, fopt, info = minimize(wing_optimizer, c0, ng, lc, uc, lg, ug, options)
+
+return xopt, fopt, info
+end
+
+function GetSpanLiftDistribution2(span, xle, yle, zle, chord_opt, theta, phi, fc, ns, Vinf, ref)
 
     span=span
     xle = xle
@@ -264,11 +269,11 @@ function GetSpanLiftDistribution2(span, xle, yle, zle, chord_opt, theta, phi, fc
 
     # reference parameters
     rref = [0.50, 0.0, 0.0]
-    ref = Reference(Sref, cref, bref, rref, Vinf)
+    ref = ref
     rho = 1.225
 
     # freestream parameters
-    alpha_angle = 5*pi/180
+    alpha_angle = 10*pi/180
     beta = 0.0
     Omega = [0.0; 0.0; 0.0]
     fs = Freestream(Vinf, alpha_angle, beta, Omega)
@@ -410,13 +415,8 @@ function GetWingValues(num_sec, density, xstart)
     # Plot the chords
     plot=plot_chords(xle, yle, chord_opt, num_sec)
     savefig("Chord Plot")
-    return span, xle, yle, zle, chord_opt, theta, phi, fc, ns, Vinf
+    return span, xle, yle, zle, chord_opt, theta, phi, fc, ns, Vinf, ref
 end   
-
-xopt, fopt, info = minimize(wing_optimizer, c0, ng, lc, uc, lg, ug, options)
-
-return xopt, fopt, info
-end
 
 function SetUpTail(c, lh, lv)
 
