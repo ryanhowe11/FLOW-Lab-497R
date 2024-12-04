@@ -116,3 +116,7 @@ x1, f1 = OptimizeChord(N, density, xstart_vec)
 
 # xstart_vec = [1.1, 3.9, .07, 4.56, .03, 4.91, 3.9, 2.1, .5, 4.73, .1, 4.8, 2.5, 6, 1, 5]
 # x10, f10 = OptimizeChord(N, density, xstart_vec)
+
+span, xle, yle, zle, chord_opt, theta, phi, fc, ns, Vinf = GetWingValues(N, density, x1)
+
+GetSpanLiftDistribution(span, xle, yle, zle, chord_opt, theta, phi, fc, ns, Vinf)

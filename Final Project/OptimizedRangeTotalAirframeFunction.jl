@@ -1,4 +1,9 @@
 using LinearAlgebra
+using Plots
+using VortexLattice
+using QuadGK
+using Interpolations
+using Trapz
     
 #Setting up all the problem variables
 function ProblemSetup(num_sec, density, c)
@@ -83,6 +88,176 @@ function ReferenceCalculation(num_sec, yle, span, Vinf, c)
 return Sref, ref
 end
 
+function GetSpanLiftDistribution(span, xle, yle, zle, chord_opt, theta, phi, fc, ns, Vinf)
+
+    span=span
+    xle = xle
+    yle = yle
+    zle = zle
+    chord = chord_opt
+    theta = theta
+    phi = phi
+    fc = fc                 # camberline function for each section
+
+    # discretization parameters
+    ns = ns+1
+    Vinf = Vinf
+
+    nc = 1
+    spacing_s = Uniform()
+    spacing_c = Uniform()
+
+    # reference parameters
+    rref = [0.50, 0.0, 0.0]
+    ref = Reference(Sref, cref, bref, rref, Vinf)
+    rho = 1.225
+
+    # freestream parameters
+    alpha_angle = 5*pi/180
+    beta = 0.0
+    Omega = [0.0; 0.0; 0.0]
+    fs = Freestream(Vinf, alpha_angle, beta, Omega)
+
+    # construct surface
+    grid, surface = wing_to_surface_panels(xle, yle, zle, chord, theta, phi, ns, nc;
+    spacing_s=spacing_s, spacing_c=spacing_c)
+
+    # create vector containing all surfaces
+    surfaces = [surface]
+
+    # we can use symmetry since the geometry and flow conditions are symmetric about the X-Z axis
+    symmetric = true
+
+    # perform steady state analysis
+    system = steady_analysis(surfaces, ref, fs; symmetric=symmetric)
+
+    # retrieve near-field forces
+    CF, CM = body_forces(system; frame=Wind())
+
+    # perform far-field analysis
+    CDiff = far_field_drag(system)
+
+    CD, CY, CL = CF
+    Cl, Cm, Cn = CM
+
+    dCF, dCM = stability_derivatives(system)
+
+    CDa, CYa, CLa = dCF.alpha
+    Cla, Cma, Cna = dCM.alpha
+    CDb, CYb, CLb = dCF.beta
+    Clb, Cmb, Cnb = dCM.beta
+    CDp, CYp, CLp = dCF.p
+    Clp, Cmp, Cnp = dCM.p
+    CDq, CYq, CLq = dCF.q
+    Clq, Cmq, Cnq = dCM.q
+    CDr, CYr, CLr = dCF.r
+    Clr, Cmr, Cnr = dCM.r
+
+    properties = get_surface_properties(system)
+
+    grids=[grid]
+
+    r, c = lifting_line_geometry(grids, 0.25)
+
+    cf, cm = lifting_line_coefficients(system, r, c; frame=Wind())
+
+    # Calculate aerodynamic efficiency
+    #println("Aerodynamic Efficiency (L/D ratio): ", efficiency, " Number of Sections: ", num_sec)
+    write_vtk("elliptic-mirrored-planar-wing", surfaces, properties; symmetric)
+
+    # Assuming cf is your vector of matrices
+    z_direction_coefficients = []
+
+    # Loop through each matrix in the cf vector
+    for matrix in cf
+    # Extract the third row (z-direction force coefficients)
+    z_coefficients = matrix[3, :]
+    push!(z_direction_coefficients, z_coefficients)
+    end
+
+    y = collect(range(0, stop=span, step=0.1))
+
+    # Convert the list of z-direction coefficients to an array if needed
+    lifting_coefficients = hcat(z_direction_coefficients...)
+
+    Lift_prime = .5*rho*Vinf^2*lifting_coefficients[:, 1] .* chord
+
+    area_prime = trapz(yle, Lift_prime)
+
+    bprime = span
+    aprime = 4*area_prime/(bprime*pi)
+
+    # Calculate the ideal elliptic lift distribution
+    θ = range(0, π/2, length=100)
+    x = bprime * cos.(θ)
+    y = aprime * sin.(θ)
+    #Cl_max = maximum(Lift_prime)
+    #elliptical_distribution = Cl_max * sqrt.(1 .- (y ./ span).^2)
+
+    # Plot the lift distribution
+    plot(yle, Lift_prime, label="Calculated Lift Distribution", xlabel="Spanwise Location (y)", ylabel="Lift Coefficient (Cl)")
+    #plot!(y, elliptical_distribution, label="Elliptical Lift Distribution", linestyle=:dash)
+    plot!(x, y, linestyle=:dash, label="Elliptical Lift Distribution", legend=:bottomleft, legendfontsize=10, grid=false)
+
+    # Save the lift distribution plot as a PDF
+    savefig("Lift_Distribution_along_the_Span_Final_Total.pdf")
+
+end
+
+function GetWingValues(num_sec, density, xstart)
+
+    lh, lv, dt, chord_opt, span, rho, Vinf, weight, yle, zle, theta, phi, fc, xle, ns, nc, spacing_s, spacing_c = ProblemSetup(num_sec, density, xstart)
+
+    xle_h, yle_h, zle_h, chord_h, theta_h, phi_h, fc_h, ns_h, nc_h, spacing_s_h, spacing_c_h, mirror_h, xle_v, yle_v, zle_v, chord_v, theta_v, phi_v, fc_v, ns_v, nc_v, spacing_s_v, spacing_c_v, mirror_v=SetUpTail(xstart, lh, lv)
+
+    Sref, ref = ReferenceCalculation(num_sec, yle, span, Vinf, chord_opt)
+
+    println(Sref)
+
+    fs = FreestreamParams(Vinf)
+
+    # construct surface
+    grid_opt, surface_opt = wing_to_surface_panels(xle, yle, zle, chord_opt, theta, phi, ns, nc;
+    spacing_s=spacing_s, spacing_c=spacing_c)
+
+    # generate surface panels for horizontal tail
+    hgrid_opt, htail_opt = wing_to_surface_panels(xle_h, yle_h, zle_h, chord_h, theta_h, phi_h, ns_h, nc_h;
+    mirror=mirror_h, fc=fc_h, spacing_s=spacing_s_h, spacing_c=spacing_c_h)
+    VortexLattice.translate!(hgrid_opt, [dt, 0.0, 0.0])
+    VortexLattice.translate!(htail_opt, [dt, 0.0, 0.0])
+
+    # generate surface panels for vertical tail
+    vgrid_opt, vtail_opt = wing_to_surface_panels(xle_v, yle_v, zle_v, chord_v, theta_v, phi_v, ns_v, nc_v;
+    mirror=mirror_v, fc=fc_v, spacing_s=spacing_s_v, spacing_c=spacing_c_v)
+    VortexLattice.translate!(vgrid_opt, [dt, 0.0, 0.0])
+    VortexLattice.translate!(vtail_opt, [dt, 0.0, 0.0])
+
+            # we can use symmetry since the geometry and flow conditions are symmetric about the X-Z axis
+    symmetric = [true, true, false]
+
+    # create vector containing all surfaces
+    surfaces_opt = [surface_opt, htail_opt, vtail_opt]
+
+    system_opt = steady_analysis(surfaces_opt, ref, fs; symmetric=symmetric)
+
+    properties_opt = get_surface_properties(system_opt)
+
+    write_vtk("optimized-symmetric-planar-wing", surfaces_opt, properties_opt; symmetric=symmetric)
+
+    println("Optimized leading edge values: ", xle)
+    println("Optimized chord values: ", chord_opt)
+    println("Optimized twist value:  ", theta*180/pi)
+    println("Optimized dihedral angle:  ", phi*180/pi)
+    println("Optimized flight speed:  ", Vinf)
+    println("Optimized tail distance:  ", dt)
+    println("Optimized Horizontal tail size = ", lh)
+    println("Optimized Vertical tail size = ", lv)
+    # Plot the chords
+    plot=plot_chords(xle, yle, chord_opt, num_sec)
+    savefig("Chord Plot")
+    return span, xle, yle, zle, chord_opt, theta, phi, fc, ns, Vinf
+end   
+
 #gives you your fs variable to use in Vortex Lattice
 function FreestreamParams(Vinf)
 
@@ -131,7 +306,7 @@ function OptimizationSetup(num_sec, xstart)
 
  lc = fill(0.01, 2*num_sec+7)  # lower bounds on x
  uc = fill(5.0, 2*num_sec+7)  # upper bounds on x
- ng = 4 + 4*num_sec  # number of constraints
+ ng = 5 + 4*num_sec  # number of constraints
  lg = -Inf*ones(ng)  # lower bounds on g
  ug = zeros(ng)  # upper bounds on g
  g = zeros(ng)
@@ -139,7 +314,7 @@ function OptimizationSetup(num_sec, xstart)
  # ----- set some options ------
  ip_options = Dict(
      "max_iter" => 1250,
-     "tol" => 1e-6
+     "tol" => 1e-7
  )
  solver = IPOPT(ip_options)
  options = Options(;solver, derivatives=ForwardFD())
@@ -230,30 +405,33 @@ function wing_optimizer(g, c)
     # g[8]= -Cnb
     # g[9]= CLp
     # g[10]= Cnr
+    O=D/(sqrt(abs(L))*Vinf)
+
+    println("O= ", O)
+
+    g[5]=-O
 
 # CLa +, CMa -, CMq -, CYb -, CLb -, CNb +, CLp -, CNr -
 
     # Calculate chord differences
     for i in 1:num_sec
-        g[i+4] = c[i+1] - c[i]
+        g[i+5] = c[i+1] - c[i]
     end
 
         # Calculate chord differences
     for i in 1:num_sec
-        g[i+num_sec+4] = 0.75 * c[i] - c[i+1]
+        g[i+num_sec+5] = 0.75 * c[i] - c[i+1]
     end
 
     # Calculate chord differences
     for i in 1:num_sec
-        g[i+2*num_sec+4] = c[i] - c[i+1]-.5
+        g[i+2*num_sec+5] = c[i] - c[i+1]-.5
     end
 
     # Calculate chord differences
     for i in num_sec+1:2*num_sec
-        g[i+2*num_sec+4] = c[i+2] - c[i+1]
+        g[i+2*num_sec+5] = c[i+2] - c[i+1]
     end
-
-    O=D/(sqrt(abs(L))*Vinf)
 
 return O
 end

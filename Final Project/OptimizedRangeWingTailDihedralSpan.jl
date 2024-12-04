@@ -189,11 +189,11 @@ N=10
 # x2, f2, p2 = OptimizeChord(N, density, xstart_vec)
 # savefig(p2, "OWS_chords_plot_2.png")
 
-xstart_vec = [0.30837953061458545, 0.3083792911271633, 0.3083792083792779, 0.3083787462250451, 0.3072093526786372, 0.27892011781939835, 0.26617254125520484, 0.23817024111513294, 0.20311570746117694, 0.1523371370498021, 0.11425330181532599, 2.713759375842421, 10, 10, 0.3394232702330042, 0.07699069777779421, 4.3]
-x3, f3, p3 = OptimizeChord(N, density, xstart_vec)
-
-# xstart_vec = x3
+# xstart_vec = [0.30837953061458545, 0.3083792911271633, 0.3083792083792779, 0.3083787462250451, 0.3072093526786372, 0.27892011781939835, 0.26617254125520484, 0.23817024111513294, 0.20311570746117694, 0.1523371370498021, 0.11425330181532599, 2.713759375842421, 10, 10, 0.3394232702330042, 0.07699069777779421, 4.3]
 # x3, f3, p3 = OptimizeChord(N, density, xstart_vec)
+
+xstart_vec = x3
+x3, f3, p3 = OptimizeChord(N, density, xstart_vec)
 # savefig(p3, "OWS_chords_plot_3_1.png")
 
 # xstart_vec = x4
@@ -258,3 +258,7 @@ x3, f3, p3 = OptimizeChord(N, density, xstart_vec)
 # xstart_vec = x11
 # x11, f11, p11 = OptimizeChord(N, density, xstart_vec)
 # savefig(p11, "OWS_chords_plot_11.png")
+
+span, xle, yle, zle, chord_opt, theta, phi, fc, ns, Vinf = GetWingValues(N, density, x3)
+
+GetSpanLiftDistribution(span, xle, yle, zle, chord_opt, theta, phi, fc, ns, Vinf)

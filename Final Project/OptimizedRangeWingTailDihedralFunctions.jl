@@ -1,5 +1,10 @@
 using LinearAlgebra
-    
+using Plots
+using VortexLattice
+using QuadGK
+using Interpolations
+using Trapz
+
 #Setting up all the problem variables
 function ProblemSetup(num_sec, density, c)
 T = eltype(c)
@@ -133,7 +138,7 @@ function OptimizationSetup(num_sec, xstart)
  # ----- set some options ------
  ip_options = Dict(
      "max_iter" => 1250,
-     "tol" => 1e-2
+     "tol" => 1e-3
  )
  solver = IPOPT(ip_options)
  options = Options(;solver, derivatives=ForwardFD())
