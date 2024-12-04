@@ -86,5 +86,5 @@ df = CSV.File("0012 Drag.csv", header=false) |> DataFrame
 
 
 
-p=plot(aoa_range, c_m, grid=false, label =  "Generated NACA 0012", xlabel="Angle of Attack (degrees)", ylabel="Drag Coefficient", show=true, legend=false)
+p=plot(aoa_range, c_m, grid=false, label =  "Generated NACA 0012", xlabel="Angle of Attack (degrees)", ylabel="Moment Coefficient", show=true, legend=false)
 savefig(p, "$(airfoil).pdf")

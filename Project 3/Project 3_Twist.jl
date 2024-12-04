@@ -5,7 +5,7 @@ using FiniteDiff
 using ForwardDiff
 using Plots
 
-global num_sec = 24
+global num_sec = 12
 global sec_2 = Int(.5*num_sec)
 global scale_factor = 1
 global Chord_Length = 1
@@ -242,7 +242,7 @@ elliptical_distribution = Cl_max * sqrt.(1 .- (y2 ./ span).^2)
 
 # Plot the lift distribution
 plot(yle_2, Lift_prime, label="Optimized Lift Distribution", xlabel="Spanwise Location (y)", ylabel="Lift Coefficient (Cl)")
-plot!(y2, elliptical_distribution, label="Elliptical Lift Distribution", linestyle=:dash)
+plot!(y2, elliptical_distribution, label="Elliptical Lift Distribution", linestyle=:dash, grid=false)
 
 
 # Save the lift distribution plot as a PDF
