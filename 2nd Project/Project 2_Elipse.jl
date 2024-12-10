@@ -71,7 +71,7 @@ Create and section off an eliptic wing based on its root chord, span, and number
 # Define inputs of function
 span = 10       
 root = 3
-num_sec = 48
+num_sec = 3
 filename = "eliptic_wing_section_plot.pdf"
 x_points, y_points, points, chords, Sref, cref, bref = elliptic_wing(root, span, num_sec, filename)
 #println("Intersection points: ", points)
@@ -182,9 +182,9 @@ y = aprime * sin.(θ)
 #elliptical_distribution = Cl_max * sqrt.(1 .- (y ./ span).^2)
 
 # Plot the lift distribution
-plot(yle, Lift_prime, label="Calculated Lift Distribution with 48 Sections", xlabel="Spanwise Location (y)", ylabel="Lift Coefficient (Cl)")
+plot!(yle, Lift_prime, label="Calculated Lift Distribution with 3 Sections", xlabel="Spanwise Location (y)", ylabel="Lift Coefficient (Cl)")
 #plot!(y, elliptical_distribution, label="Elliptical Lift Distribution", linestyle=:dash)
-#plot!(x, y, linestyle=:dash, label="Elliptical Lift Distribution for 3 Sections", legend=:bottomleft)
+plot!(x, y, linestyle=:dash, label="Elliptical Lift Distribution for 3 Sections", legend=:bottomleft, legendfontsize=10, grid=false)
 
 # Save the lift distribution plot as a PDF
 savefig("Lift_Distribution_along_the_Span_Experiments.pdf")
