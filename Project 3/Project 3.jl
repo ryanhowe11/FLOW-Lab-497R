@@ -159,8 +159,8 @@ using Plots
     end
 
     # discretization parameters
-    ns = num_sec
-    nc = num_sec
+    ns = num_sec+1
+    nc = 1
 
     symmetric = true
 
@@ -228,4 +228,65 @@ using Plots
     # Plot the chords
     plot_chords(xle_opt, yle, chord_opt)
     savefig("Chord Plot")
+
+    # create vector containing all surfaces
+surfaces_opt = [surface_opt]
+
+system_opt = steady_analysis(surfaces_opt, ref, fs; symmetric=true)
+
+properties_opt = get_surface_properties(system_opt)
+
+grids=[grid_opt]
+
+r, c = lifting_line_geometry(grids, 0.25)
+
+cf, cm = lifting_line_coefficients(system_opt, r, c; frame=Wind())
+
+write_vtk("optimized-symmetric-planar-wing", surfaces_opt, properties_opt; symmetric=true)
+
+chords=chord_opt
+
+for i in 1:num_sec
+    xle_opt[i] = ((1-chords[i])/2)
+end
+
+# Assuming cf is your vector of matrices
+z_direction_coefficients = []
+
+# Loop through each matrix in the cf vector
+for matrix in cf
+    # Extract the third row (z-direction force coefficients)
+    z_coefficients = matrix[3, :]
+    push!(z_direction_coefficients, z_coefficients)
+end
+
+y2 = collect(range(0, stop=span, step=0.1))
+
+# Convert the list of z-direction coefficients to an array if needed
+lifting_coefficients = hcat(z_direction_coefficients...)
+
+Lift_prime = .5*rho*Vinf^2*chord_opt.*lifting_coefficients[:, 1]
+push!(Lift_prime, 0)
+
+yle_2 = [i * (span / (num_sec)) for i in 0:(num_sec)]
+push!(yle_2, 8.00000001)
+area_prime = trapz(yle_2, Lift_prime)
+
+bprime = span
+aprime = 4*area_prime/(bprime*pi)
+
+# Calculate the ideal elliptic lift distribution
+θ = range(0, π/2, length=100)
+x = bprime * cos.(θ)
+y = aprime * sin.(θ)
+Cl_max = maximum(Lift_prime)
+elliptical_distribution = Cl_max * sqrt.(1 .- (y2 ./ span).^2)
+
+# Plot the lift distribution
+plot(yle_2, Lift_prime, label="Optimized Lift Distribution", xlabel="Spanwise Location (y)", ylabel="Lift Coefficient (Cl)")
+plot!(y2, elliptical_distribution, label="Elliptical Lift Distribution", linestyle=:dash, grid=false)
+
+
+# Save the lift distribution plot as a PDF
+savefig("Lift_Distribution_along_the_Span_Optimization.pdf")
 
