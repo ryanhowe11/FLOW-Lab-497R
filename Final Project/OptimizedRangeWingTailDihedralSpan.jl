@@ -151,7 +151,7 @@ N=10
 
 # xstart_vec = 5*ones(N+7)
 # x3, f3, p3 = OptimizeChord(N, density, xstart_vec)
-#savefig(p3, "OWS_chords_plot_3_1.png")
+# savefig(p3, "OWS_chords_plot_3_1.png")
 
 # xstart_vec = [.1, .2, .3, .4, .5, .6, .7, .8, .9, 1, 2, 2, 2, 2, 2, 2, 5]
 # x4, f4, p4 = OptimizeChord(N, density, xstart_vec)

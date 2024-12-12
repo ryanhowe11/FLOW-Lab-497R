@@ -5,5 +5,13 @@
     <DataSet index="1" file="optimized-symmetric-planar-wing_2.vtp"/>
     <DataSet index="2" file="optimized-symmetric-planar-wing_3.vtp"/>
     <DataSet index="3" file="optimized-symmetric-planar-wing_4.vtp"/>
+    <DataSet index="4" file="optimized-symmetric-planar-wing_5.vtp"/>
+    <DataSet index="5" file="optimized-symmetric-planar-wing_6.vtp"/>
+    <DataSet index="6" file="optimized-symmetric-planar-wing_7.vtp"/>
+    <DataSet index="7" file="optimized-symmetric-planar-wing_8.vtp"/>
+    <DataSet index="8" file="optimized-symmetric-planar-wing_9.vtp"/>
+    <DataSet index="9" file="optimized-symmetric-planar-wing_10.vtp"/>
+    <DataSet index="10" file="optimized-symmetric-planar-wing_11.vtp"/>
+    <DataSet index="11" file="optimized-symmetric-planar-wing_12.vtp"/>
   </vtkMultiBlockDataSet>
 </VTKFile>
